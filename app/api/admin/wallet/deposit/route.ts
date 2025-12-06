@@ -8,9 +8,33 @@ function mailer() {
   const port = Number(process.env.SMTP_PORT || 587)
   const user = process.env.SMTP_USER || ""
   const pass = process.env.SMTP_PASS || ""
-  const from = process.env.SMTP_FROM || ""
+  // Use GMAIL_USER if SMTP_FROM is not set
+  const from = process.env.SMTP_FROM || process.env.GMAIL_USER || ""
+  
+  if (!host && !user) {
+    // Try Gmail fallback
+    const gmailUser = process.env.GMAIL_USER
+    const gmailPass = process.env.GMAIL_APP_PASSWORD
+    if (gmailUser && gmailPass) {
+      return nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: gmailUser, pass: gmailPass }
+      })
+    }
+  }
+
   if (!host || !user || !pass || !from) throw new Error("Missing SMTP configuration")
-  return nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } })
+  
+  return nodemailer.createTransport({ 
+    host, 
+    port, 
+    secure: port === 465, 
+    auth: { user, pass },
+    // Add timeouts to match main email service
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000
+  })
 }
 
 export async function POST(request: Request) {

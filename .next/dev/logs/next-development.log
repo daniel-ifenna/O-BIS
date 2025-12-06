@@ -1,16 +1,13 @@
-[00:00:03.629] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:04.059] Server  LOG      ✓ Ready in 2.8s
-[00:00:21.827] Server  LOG     [EmailService] SMTP verified successfully
-[00:00:41.860] Server  LOG     [EmailService] Verification email sent to contractor_1765043333015@example.com
-[00:01:10.263] Server  ERROR   C:\Users\HP\Downloads\constructionplatform (1)\.next\dev\server\chunks\node_modules_nodemailer_f0e2e4c8._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
-[00:01:10.282] Server  ERROR   [EmailService] Failed to send verification email to manager_1765043333015@example.com: Error: Connection closed unexpectedly
-[00:01:10.283] Server  WARN    Verification email not sent (email service not ready)
-[00:02:53.686] Server  LOG     [EmailService] Contract award email sent to contractor_1765043333015@example.com
-[00:03:17.526] Server  LOG     [EmailService] Contract award email sent to contractor_1765043333015@example.com
-[00:03:55.129] Server  LOG      ○ Compiling /api/bids/[id]/review/invite ...
-[00:09:16.158] Server  LOG     [EmailService] SMTP verified successfully
-[00:09:31.023] Server  LOG     [EmailService] Verification email sent to contractor_1765043871385@example.com
-[00:09:48.496] Server  LOG     [EmailService] Verification email sent to manager_1765043871385@example.com
-[00:10:04.138] Server  LOG     [EmailService] SMTP verified successfully
-[00:11:14.779] Server  LOG     [EmailService] Contract award email sent to contractor_1765043871385@example.com
-[00:11:36.656] Server  LOG     [EmailService] Contract award email sent to contractor_1765043871385@example.com
+[00:00:06.402] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:11.068] Server  LOG      ✓ Ready in 9.3s
+[00:00:34.344] Server  LOG      ○ Compiling /api/auth/signup ...
+[00:00:43.782] Server  LOG     [EmailService] SMTP verified successfully
+[00:00:58.130] Server  LOG     [EmailService] Verification email sent to contractor_1765051399032@example.com
+[00:01:19.779] Server  LOG     [EmailService] Verification email sent to manager_1765051399032@example.com
+[00:01:37.152] Server  LOG     [EmailService] SMTP verified successfully
+[00:01:39.357] Server  LOG     [EmailService] Password reset email sent to contractor_1765051399032@example.com
+[00:02:52.303] Server  LOG     [EmailService] Contract award email sent to contractor_1765051399032@example.com
+[00:03:12.846] Server  LOG     [EmailService] Contract award email sent to contractor_1765051399032@example.com
+[00:03:47.545] Server  LOG      ○ Compiling /api/bids/[id]/review/invite ...
+[00:10:41.656] Server  LOG     [EmailService] Contract award email sent to contractor_1765051868214@example.com
+[00:10:59.002] Server  LOG     [EmailService] Contract award email sent to contractor_1765051868214@example.com

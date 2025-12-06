@@ -1,0 +1,21 @@
+[
+  {
+    "title": "Disposable Project",
+    "location": "Test",
+    "budget": "1000000",
+    "status": "Published",
+    "bids": 0,
+    "estimatedCost": "",
+    "contingency": "",
+    "contingencyPercent": "",
+    "paymentSchedule": "",
+    "paymentTerms": "",
+    "retentionPercent": "",
+    "managerId": "manager-1",
+    "documents": {},
+    "id": 1765051691071,
+    "createdAt": "2025-12-06T20:08:11.071Z",
+    "recordDate": "2025-12-06",
+    "recordTime": "21:08"
+  }
+]

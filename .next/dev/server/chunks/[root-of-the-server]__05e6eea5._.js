@@ -526,7 +526,10 @@ class EmailService {
                 auth: {
                     user: smtpUser,
                     pass: smtpPass
-                }
+                },
+                connectionTimeout: 10000,
+                greetingTimeout: 10000,
+                socketTimeout: 10000
             });
         } else if (gmailUser && gmailPass) {
             this.transporter = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$nodemailer$2f$lib$2f$nodemailer$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].createTransport({
@@ -538,20 +541,22 @@ class EmailService {
             });
         } else {
             console.warn("[EmailService] Email service not configured (missing SMTP/Gmail envs).");
+            // In development/test, we might proceed without a transporter, but warn.
             return;
         }
-        try {
-            await this.transporter.verify();
+        // Fire-and-forget verification to avoid blocking cold starts or timing out requests
+        // if the SMTP server is slow to greet.
+        this.transporter.verify().then(()=>{
             this.isVerified = true;
             console.log("[EmailService] SMTP verified successfully");
-        } catch (err) {
+        }).catch((err)=>{
             console.error("[EmailService] SMTP verification failed:", err);
             this.isVerified = false;
-        }
+        });
     }
     getStatus() {
         return {
-            ready: this.isVerified
+            ready: Boolean(this.transporter)
         };
     }
     buildHtmlTemplate(params) {
@@ -609,8 +614,14 @@ class EmailService {
         }
         return s;
     }
+    // ... (omitted) ...
     async sendEmail(params) {
-        if (!this.transporter || !this.isVerified) return false;
+        // We attempt to send even if verification hasn't finished or failed, 
+        // because sometimes verify() is flaky on serverless but sendMail() works.
+        if (!this.transporter) {
+            console.warn("[EmailService] Cannot send email: Transporter not initialized");
+            return false;
+        }
         try {
             const isFullDoc = /^\s*<!DOCTYPE html>/i.test(params.html);
             const htmlOut = isFullDoc ? params.html : this.buildHtmlTemplate({
@@ -631,7 +642,8 @@ class EmailService {
         }
     }
     async sendContractAwardEmail(params) {
-        if (!this.transporter || !this.isVerified) return false;
+        if (!this.transporter) return false;
+        // ... (rest of the function)
         const formatNaira = (v)=>`NGN ${new Intl.NumberFormat("en-NG", {
                 maximumFractionDigits: 0
             }).format(v)}`;
@@ -677,7 +689,7 @@ class EmailService {
         }
     }
     async sendMeetingInviteEmail(params) {
-        if (!this.transporter || !this.isVerified) return false;
+        if (!this.transporter) return false;
         try {
             await this.transporter.sendMail({
                 from: process.env.SMTP_FROM || process.env.GMAIL_USER,
@@ -700,7 +712,7 @@ class EmailService {
         }
     }
     async sendPasswordResetEmail(email, name, resetUrl) {
-        if (!this.transporter || !this.isVerified) return false;
+        if (!this.transporter) return false;
         const bodyHtml = `
               <p style="margin:0 0 12px 0">Dear ${name},</p>
               <p style="margin:0 0 12px 0">Click the button below to reset your password.</p>
@@ -727,7 +739,7 @@ class EmailService {
         }
     }
     async sendVerificationEmail(email, name, verifyUrl) {
-        if (!this.transporter || !this.isVerified) return false;
+        if (!this.transporter) return false;
         const bodyHtml = `
               <p style="margin:0 0 12px 0">Dear ${name},</p>
               <p style="margin:0 0 12px 0">Please confirm your email address to activate your account.</p>

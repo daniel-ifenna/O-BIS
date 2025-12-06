@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ms-1765052027507",
+    "projectId": "85363180-3023-4c0f-94e5-0621890876e7",
+    "name": "Foundation",
+    "startDate": "2025-01-10",
+    "endDate": "2025-02-10",
+    "weight": 20,
+    "progress": 20,
+    "status": "In Progress"
+  },
+  {
+    "id": "ms-1765051561700",
+    "projectId": "a9112fae-686c-4737-83a6-46e65dbc185d",
+    "name": "Foundation",
+    "startDate": "2025-01-10",
+    "endDate": "2025-02-10",
+    "weight": 20,
+    "progress": 20,
+    "status": "In Progress"
+  }
+]

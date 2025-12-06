@@ -1,0 +1,59 @@
+[
+  {
+    "id": "pp-1765051586748",
+    "projectId": "a9112fae-686c-4737-83a6-46e65dbc185d",
+    "contractorId": "20c61f49-8db8-4265-a5bc-8c4b903dca60",
+    "item": "Cement",
+    "specification": "Grade 42.5R",
+    "quantity": 1000,
+    "unit": "kilograms",
+    "deliveryLocation": "Site A",
+    "requestedDate": "2025-01-25",
+    "status": "open",
+    "createdAt": "2025-12-06T20:06:26.744Z",
+    "publicUrl": "/public-procurement/1765051586748",
+    "quotes": [
+      {
+        "id": "vq-1765052056834",
+        "procurementId": "pp-1765051586748",
+        "vendorId": null,
+        "vendorName": "Vendor One",
+        "vendorEmail": "vendor@example.com",
+        "vendorPhone": null,
+        "pricePerUnit": "45000",
+        "totalPrice": "450000",
+        "deliveryDays": 3,
+        "deliveryDate": "2025-02-01",
+        "status": "pending",
+        "proposalUrl": null,
+        "complianceScore": null,
+        "notes": null,
+        "submittedAt": "2025-12-06T20:14:14.715Z",
+        "recordDate": "2025-12-06",
+        "recordTime": "21:14"
+      },
+      {
+        "id": "vq-1765051592826",
+        "procurementId": "pp-1765051586748",
+        "vendorId": null,
+        "vendorName": "Vendor One",
+        "vendorEmail": "vendor@example.com",
+        "vendorPhone": null,
+        "pricePerUnit": "45000",
+        "totalPrice": "450000",
+        "deliveryDays": 3,
+        "deliveryDate": "2025-02-01",
+        "status": "pending",
+        "proposalUrl": null,
+        "complianceScore": null,
+        "notes": null,
+        "submittedAt": "2025-12-06T20:06:30.208Z",
+        "recordDate": "2025-12-06",
+        "recordTime": "21:06"
+      }
+    ],
+    "isPublic": true,
+    "recordDate": "2025-12-06",
+    "recordTime": "20:06"
+  }
+]

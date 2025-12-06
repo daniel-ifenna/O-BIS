@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Mgr One",
+    "email": "manager_1765051868214@example.com",
+    "role": "manager",
+    "company": "MgrCo",
+    "passwordHash": "$2b$10$zxKE1Krxp3ZxS0IjJEKRH.YB9asFHtMJ1BBfv21jDmIlE3lGhFVD.",
+    "id": "1765051879581",
+    "createdAt": "2025-12-06T20:11:19.581Z",
+    "updatedAt": "2025-12-06T20:11:19.581Z",
+    "recordDate": "2025-12-06",
+    "recordTime": "21:11"
+  },
+  {
+    "name": "Cont One",
+    "email": "contractor_1765051868214@example.com",
+    "role": "contractor",
+    "company": "ContCo",
+    "passwordHash": "$2b$10$NG9WCxUFI/LrvDoLrGTYMuPbbsQB5xml925inXFFdtkHw2jmiEsii",
+    "id": "1765051874159",
+    "createdAt": "2025-12-06T20:11:14.159Z",
+    "updatedAt": "2025-12-06T20:11:14.159Z",
+    "recordDate": "2025-12-06",
+    "recordTime": "21:11"
+  }
+]
