@@ -62,7 +62,7 @@ function ProjectProvider({ children }) {
     ]);
     const addProject = async (project)=>{
         try {
-            const token = ("TURBOPACK compile-time value", "undefined") !== "undefined" && (localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("managerToken") || "") || "";
+            const token = ("TURBOPACK compile-time value", "undefined") !== "undefined" && (localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("auth_token") || localStorage.getItem("managerToken") || "") || "";
             const res = await fetch("/api/projects", {
                 method: "POST",
                 headers: {
@@ -154,25 +154,31 @@ function ProjectProvider({ children }) {
                 updatedRemote = await res.json();
             }
         } catch  {}
-        setProjects((prev)=>prev.map((p)=>String(p.id) === String(id) ? {
-                    ...p,
-                    ...updatedRemote ? {
+        setProjects((prev)=>prev.map((p)=>{
+                if (String(p.id) !== String(id)) return p;
+                if (updatedRemote) {
+                    const d = updatedRemote.createdAt ? new Date(updatedRemote.createdAt) : null;
+                    let createdAt = p.createdAt;
+                    if (d) {
+                        const y = d.getFullYear();
+                        const m = String(d.getMonth() + 1).padStart(2, "0");
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const h = String(d.getHours()).padStart(2, "0");
+                        const min = String(d.getMinutes()).padStart(2, "0");
+                        createdAt = `${y}-${m}-${day} ${h}:${min}`;
+                    }
+                    return {
+                        ...p,
                         status: String(updatedRemote.status || "Closed"),
                         budget: updatedRemote.budget != null ? String(updatedRemote.budget) : p.budget,
-                        createdAt: (()=>{
-                            const d = updatedRemote.createdAt ? new Date(updatedRemote.createdAt) : null;
-                            if (!d) return p.createdAt;
-                            const y = d.getFullYear();
-                            const m = String(d.getMonth() + 1).padStart(2, "0");
-                            const day = String(d.getDate()).padStart(2, "0");
-                            const h = String(d.getHours()).padStart(2, "0");
-                            const min = String(d.getMinutes()).padStart(2, "0");
-                            return `${y}-${m}-${day} ${h}:${min}`;
-                        })()
-                    } : {
-                        status: "Closed"
-                    }
-                } : p));
+                        createdAt
+                    };
+                }
+                return {
+                    ...p,
+                    status: p.status === "Awarded" ? "Awarded" : "Closed"
+                };
+            }));
     };
     const setProjectStatus = async (id, status)=>{
         try {
@@ -311,7 +317,7 @@ function ProjectProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/lib/project-context.tsx",
-        lineNumber: 303,
+        lineNumber: 304,
         columnNumber: 5
     }, this);
 }
@@ -469,6 +475,11 @@ function AuthProvider({ children }) {
             }
             setUser(userData);
             localStorage.setItem("auth_user", JSON.stringify(userData));
+            if (userData?.token) {
+                try {
+                    localStorage.setItem("auth_token", String(userData.token));
+                } catch  {}
+            }
             try {
                 document.cookie = `auth_role=${userData.role}; Path=/; SameSite=Lax`;
             } catch  {}
@@ -556,7 +567,7 @@ function AuthProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/lib/auth-context.tsx",
-        lineNumber: 212,
+        lineNumber: 215,
         columnNumber: 10
     }, this);
 }
@@ -979,7 +990,7 @@ function PaymentProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/lib/payment-context.tsx",
-        lineNumber: 77,
+        lineNumber: 78,
         columnNumber: 5
     }, this);
 }
@@ -1614,7 +1625,7 @@ function BidProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/lib/bid-context.tsx",
-        lineNumber: 380,
+        lineNumber: 381,
         columnNumber: 5
     }, this);
 }
