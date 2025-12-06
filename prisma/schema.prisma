@@ -40,12 +40,16 @@ enum TransactionType {
   requested
   withdrawn
   refunded
+  deposit
+  payment
 }
 
 enum PaymentStatus {
   PENDING
   APPROVED
   REJECTED
+  COMPLETED
+  FAILED
 }
 
 enum BankAccountType {
@@ -64,6 +68,13 @@ enum StorageCategory {
   contracts
   progress_photos
   proof_of_delivery
+}
+
+enum PaymentMethodType {
+  card
+  bank_transfer
+  ussd
+  mobile_money
 }
 
 model User {
@@ -86,6 +97,7 @@ model User {
   paymentRequests PaymentRequest[]
   resetTokens     PasswordResetToken[]
   verificationTokens EmailVerificationToken[]
+  payments        Payment[]
 }
 
 model Contractor {
@@ -161,6 +173,7 @@ model Project {
   milestones         Milestone[]
   dailyReports       DailyReport[]
   BidInvitation      BidInvitation[]
+  payments           Payment[]
 }
 
 model Bid {
@@ -244,6 +257,8 @@ model EscrowWalletTransaction {
   date             DateTime        @default(now())
   description      String?
   paymentRequestId String?
+  paymentId        String?
+  payment          Payment?        @relation(fields: [paymentId], references: [id], onDelete: SetNull)
   recordDate       String?
   recordTime       String?
 
@@ -300,9 +315,44 @@ model PaymentRequest {
   proofSize        Int?
   recordDate       String?
   recordTime       String?
+  payments         Payment[]
 
   @@index([userId])
   @@index([projectId])
+  @@index([status])
+}
+
+model Payment {
+  id               String                   @id @default(uuid())
+  reference        String                   @unique // External ref (e.g., Paystack/Stripe ID)
+  amount           Decimal                  @db.Decimal(19, 4)
+  currency         String                   @default("NGN")
+  status           PaymentStatus
+  method           PaymentMethodType
+  description      String?
+  metadata         Json?
+  
+  userId           String
+  user             User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  projectId        String?
+  project          Project?                 @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  
+  paymentRequestId String?
+  paymentRequest   PaymentRequest?          @relation(fields: [paymentRequestId], references: [id], onDelete: SetNull)
+  
+  transactions     EscrowWalletTransaction[]
+
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  paidAt           DateTime?
+  
+  recordDate       String?
+  recordTime       String?
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([reference])
   @@index([status])
 }
 
