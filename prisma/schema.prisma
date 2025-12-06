@@ -1,0 +1,398 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  manager
+  contractor
+  vendor
+}
+
+enum ProjectStatus {
+  Published
+  Bidding
+  Closed
+  Awarded
+  Completed
+}
+
+enum BidStatus {
+  New
+  Reviewed
+  Accepted
+  Rejected
+  Awarded
+}
+
+enum ProcurementStatus {
+  open
+  quoted
+  awarded
+}
+
+enum TransactionType {
+  received
+  requested
+  withdrawn
+  refunded
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BankAccountType {
+  savings
+  current
+  checking
+  business
+}
+
+enum StorageCategory {
+  bidding_documents
+  technical_proposals
+  financial_proposals
+  procurement_specifications
+  vendor_quotations
+  contracts
+  progress_photos
+  proof_of_delivery
+}
+
+model User {
+  id              String                    @id @default(uuid())
+  name            String
+  email           String                    @unique
+  role            Role
+  company         String?
+  passwordHash    String
+  isVerified      Boolean                   @default(false)
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  recordDate      String?
+  recordTime      String?
+  contractor      Contractor?
+  manager         Manager?
+  vendor          Vendor?
+  transactions    EscrowWalletTransaction[]
+  files           FileStorageRecord[]
+  paymentRequests PaymentRequest[]
+  resetTokens     PasswordResetToken[]
+  verificationTokens EmailVerificationToken[]
+}
+
+model Contractor {
+  id           String               @id @default(uuid())
+  userId       String               @unique
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  recordDate   String?
+  recordTime   String?
+  projects     Project[]
+  bids         Bid[]
+  procurements ProcurementRequest[]
+  DailyReport  DailyReport[]
+}
+
+model Vendor {
+  id         String              @id @default(uuid())
+  userId     String              @unique
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company    String?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  recordDate String?
+  recordTime String?
+  files      FileStorageRecord[]
+}
+
+model Manager {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  recordDate String?
+  recordTime String?
+  projects   Project[]
+}
+
+model Project {
+  id                 String                    @id @default(uuid())
+  title              String
+  location           String
+  budget             Decimal?                  @db.Decimal(19, 4)
+  status             ProjectStatus
+  bidsCount          Int                       @default(0)
+  estimatedCost      Decimal?                  @db.Decimal(19, 4)
+  contingency        Decimal?                  @db.Decimal(19, 4)
+  contingencyPercent Decimal?                  @db.Decimal(5, 2)
+  paymentSchedule    String?
+  paymentTerms       String?
+  retentionPercent   Decimal?                  @db.Decimal(5, 2)
+  category           String?
+  description        String?
+  clientName         String?
+  clientCompany      String?
+  bidDays            Int?
+  maxBids            Int?
+  contractorId       String?
+  contractor         Contractor?               @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  managerId          String?
+  manager            Manager?                  @relation(fields: [managerId], references: [id], onDelete: SetNull)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  recordDate         String?
+  recordTime         String?
+  bids               Bid[]
+  procurements       ProcurementRequest[]
+  transactions       EscrowWalletTransaction[]
+  files              FileStorageRecord[]
+  paymentRequests    PaymentRequest[]
+  milestones         Milestone[]
+  dailyReports       DailyReport[]
+  BidInvitation      BidInvitation[]
+}
+
+model Bid {
+  id           String              @id @default(uuid())
+  projectId    String
+  project      Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contractorId String?
+  contractor   Contractor?         @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  bidderName   String
+  companyName  String
+  email        String
+  phone        String?
+  address      String?
+  amount       Decimal             @db.Decimal(19, 4)
+  duration     Int
+  message      String?
+  status       BidStatus           @default(New)
+  submittedAt  DateTime            @default(now())
+  reviewedAt   DateTime?
+  recordDate   String?
+  recordTime   String?
+  files        FileStorageRecord[]
+  invitations  BidInvitation[]
+
+  @@index([projectId])
+}
+
+model BidInvitation {
+  id             String   @id @default(uuid())
+  bidId          String
+  bid            Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  meetingTitle   String
+  date           String
+  time           String
+  googleMeetLink String
+  message        String?
+  attendees      Json?
+  sentTo         Json?
+  createdAt      DateTime @default(now())
+  recordDate     String?
+  recordTime     String?
+
+  @@index([bidId])
+  @@index([projectId])
+}
+
+model ProcurementRequest {
+  id               String              @id @default(uuid())
+  projectId        String
+  project          Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contractorId     String?
+  contractor       Contractor?         @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  item             String
+  specification    String
+  quantity         Int
+  unit             String
+  deliveryLocation String
+  requestedDate    DateTime
+  status           ProcurementStatus
+  isPublic         Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  recordDate       String?
+  recordTime       String?
+  files            FileStorageRecord[]
+  quotes           VendorQuote[]
+
+  @@index([projectId])
+}
+
+model EscrowWalletTransaction {
+  id               String          @id @default(uuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId        String?
+  project          Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  type             TransactionType
+  amount           Decimal         @db.Decimal(19, 4)
+  date             DateTime        @default(now())
+  description      String?
+  paymentRequestId String?
+  recordDate       String?
+  recordTime       String?
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model FileStorageRecord {
+  id            String              @id @default(uuid())
+  category      StorageCategory
+  url           String
+  path          String
+  contentType   String
+  size          Int
+  projectId     String?
+  project       Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bidId         String?
+  bid           Bid?                @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  procurementId String?
+  procurement   ProcurementRequest? @relation(fields: [procurementId], references: [id], onDelete: Cascade)
+  vendorId      String?
+  vendor        Vendor?             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime            @default(now())
+  recordDate    String?
+  recordTime    String?
+
+  @@index([projectId])
+  @@index([bidId])
+  @@index([procurementId])
+}
+
+model PaymentRequest {
+  id               String          @id @default(uuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userType         Role
+  projectId        String?
+  project          Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  amount           Decimal         @db.Decimal(19, 4)
+  status           PaymentStatus   @default(PENDING)
+  requestedAt      DateTime        @default(now())
+  reviewedAt       DateTime?
+  reviewedBy       String?
+  rejectionReason  String?
+  bankName         String
+  branch           String
+  accountType      BankAccountType
+  accountNumberEnc String
+  proofUrl         String
+  proofPath        String?
+  proofContentType String?
+  proofSize        Int?
+  recordDate       String?
+  recordTime       String?
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+}
+
+model Milestone {
+  id         String    @id @default(uuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name       String
+  startDate  DateTime
+  endDate    DateTime?
+  weight     Int
+  progress   Int       @default(0)
+  status     String?
+  createdAt  DateTime  @default(now())
+  recordDate String?
+  recordTime String?
+
+  @@index([projectId])
+}
+
+model DailyReport {
+  id              String      @id @default(uuid())
+  projectId       String
+  project         Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contractorId    String?
+  contractor      Contractor? @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  date            String
+  time            String
+  crew            String
+  crewChief       String?
+  totalPersonnel  Int
+  workDescription String
+  workPercentage  Int
+  safetyIncidents Int
+  qaIssues        Int
+  attachments     Json?
+  createdAt       DateTime    @default(now())
+  recordDate      String?
+  recordTime      String?
+
+  @@index([projectId])
+}
+
+model VendorQuote {
+  id              String             @id @default(uuid())
+  procurementId   String
+  procurement     ProcurementRequest @relation(fields: [procurementId], references: [id], onDelete: Cascade)
+  vendorId        String?
+  vendorName      String
+  vendorEmail     String
+  vendorPhone     String?
+  pricePerUnit    Decimal            @db.Decimal(19, 4)
+  totalPrice      Decimal            @db.Decimal(19, 4)
+  deliveryDays    Int
+  deliveryDate    DateTime
+  submittedAt     DateTime           @default(now())
+  status          String             @default("pending")
+  proposalUrl     String?
+  complianceScore Int?
+  notes           String?
+  recordDate      String?
+  recordTime      String?
+
+  @@index([procurementId])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issuedAt   DateTime @default(now())
+  expiresAt  DateTime
+  used       Boolean  @default(false)
+  recordDate String?
+  recordTime String?
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issuedAt   DateTime @default(now())
+  expiresAt  DateTime
+  used       Boolean  @default(false)
+  recordDate String?
+  recordTime String?
+
+  @@index([userId])
+}

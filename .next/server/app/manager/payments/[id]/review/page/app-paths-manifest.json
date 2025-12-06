@@ -1,0 +1,3 @@
+{
+  "/manager/payments/[id]/review/page": "app/manager/payments/[id]/review/page.js"
+}

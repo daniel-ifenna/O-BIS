@@ -1,0 +1,19 @@
+[
+  {
+    "projectId": "b6910bd9-4ece-4158-99c9-a1f67904eb70",
+    "contractorId": "49bdcf64-c0c3-4b30-819a-fa24b7405660",
+    "date": "2025-01-20",
+    "time": "10:00",
+    "crew": "Alpha Team",
+    "crewChief": "John",
+    "totalPersonnel": 10,
+    "workDescription": "Foundation",
+    "workPercentage": 20,
+    "safetyIncidents": 0,
+    "qaIssues": 0,
+    "attachments": [],
+    "id": "dr-1764887488438",
+    "recordDate": "2025-12-04",
+    "recordTime": "23:31"
+  }
+]

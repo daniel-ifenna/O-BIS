@@ -1,0 +1,10 @@
+var R=require("../../../../../chunks/[turbopack]_runtime.js")("server/app/api/bids/[id]/invite-meeting/route.js")
+R.c("server/chunks/[root-of-the-server]__d6cc6377._.js")
+R.c("server/chunks/node_modules_60359880._.js")
+R.c("server/chunks/node_modules_next_dist_esm_build_templates_app-route_66945d21.js")
+R.c("server/chunks/_4a6da554._.js")
+R.c("server/chunks/[root-of-the-server]__b6491784._.js")
+R.c("server/chunks/[root-of-the-server]__cc4c11de._.js")
+R.c("server/chunks/_next-internal_server_app_api_bids_[id]_invite-meeting_route_actions_2dea9f77.js")
+R.m(58823)
+module.exports=R.m(58823).exports

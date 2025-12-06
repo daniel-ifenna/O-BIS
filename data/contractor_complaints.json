@@ -1,0 +1,17 @@
+[
+  {
+    "projectId": "b6910bd9-4ece-4158-99c9-a1f67904eb70",
+    "contractorId": "contractor-1",
+    "contractorName": "Cont One",
+    "managerId": "6857e2fe-ebac-4eb9-a275-43b58ba56de0",
+    "category": "payment-delay",
+    "subject": "Delayed Payment",
+    "description": "Funds not released",
+    "severity": "medium",
+    "status": "open",
+    "id": "complaint-1764887496013",
+    "filedAt": "2025-12-04T22:31:36.013Z",
+    "recordDate": "2025-12-04",
+    "recordTime": "23:31"
+  }
+]
