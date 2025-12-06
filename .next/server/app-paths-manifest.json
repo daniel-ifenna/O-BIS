@@ -52,6 +52,8 @@
   "/api/wallet/[userId]/route": "app/api/wallet/[userId]/route.js",
   "/api/wallet/[userId]/transactions/route": "app/api/wallet/[userId]/transactions/route.js",
   "/api/wallet/internal-transfer/route": "app/api/wallet/internal-transfer/route.js",
+  "/auth/forgot-password/page": "app/auth/forgot-password/page.js",
+  "/auth/reset-password/page": "app/auth/reset-password/page.js",
   "/auth/sign-in/page": "app/auth/sign-in/page.js",
   "/auth/sign-up/page": "app/auth/sign-up/page.js",
   "/auth/vendor-signup/page": "app/auth/vendor-signup/page.js",

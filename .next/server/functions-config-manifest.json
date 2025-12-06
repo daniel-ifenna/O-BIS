@@ -1,10 +1,10 @@
 {
   "version": 1,
   "functions": {
-    "/api/procurements/[id]/quotes": {},
+    "/api/email/contract-award": {},
     "/api/procurements/public": {},
-    "/api/bids/[id]/award": {},
+    "/api/procurements/[id]/quotes": {},
     "/api/storage/upload": {},
-    "/api/email/contract-award": {}
+    "/api/bids/[id]/award": {}
   }
 }

@@ -560,7 +560,13 @@ function ManagerBalance() {
   return (
     <div>
       <p className="text-2xl font-bold text-primary">{bal == null ? "Loading..." : formatNaira(bal)}</p>
-      <p className="text-xs text-muted-foreground mt-1">This is a virtual wallet. Real deposits not available until financial API integration.</p>
+      <p className="text-xs text-muted-foreground mt-1 mb-3">This is a virtual wallet. Deposits are now supported via API simulation.</p>
+      <Link href="/manager/wallet/deposit">
+        <Button size="sm" className="w-full sm:w-auto bg-primary hover:bg-primary/90">
+          <Plus className="w-3 h-3 mr-1" />
+          Deposit Funds
+        </Button>
+      </Link>
     </div>
   )
 }

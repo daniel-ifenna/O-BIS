@@ -74,7 +74,12 @@ export default function ContractorWallet() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-green-600">{formatCurrency(balance)}</p>
-              <p className="text-xs text-muted-foreground mt-1">Ready to withdraw</p>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-xs text-muted-foreground">Ready to withdraw</p>
+                <Link href="/contractor/wallet/withdraw">
+                  <Button size="sm" variant="outline" className="h-6 text-xs">Withdraw</Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
 

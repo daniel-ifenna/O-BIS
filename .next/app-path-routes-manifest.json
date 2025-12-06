@@ -52,6 +52,8 @@
   "/api/wallet/[userId]/route": "/api/wallet/[userId]",
   "/api/wallet/[userId]/transactions/route": "/api/wallet/[userId]/transactions",
   "/api/wallet/internal-transfer/route": "/api/wallet/internal-transfer",
+  "/auth/forgot-password/page": "/auth/forgot-password",
+  "/auth/reset-password/page": "/auth/reset-password",
   "/auth/sign-in/page": "/auth/sign-in",
   "/auth/sign-up/page": "/auth/sign-up",
   "/auth/vendor-signup/page": "/auth/vendor-signup",

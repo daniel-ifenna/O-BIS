@@ -499,6 +499,18 @@
       "namedRegex": "^/api/wallet/internal\\-transfer(?:/)?$"
     },
     {
+      "page": "/auth/forgot-password",
+      "regex": "^/auth/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/auth/reset-password",
+      "regex": "^/auth/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset\\-password(?:/)?$"
+    },
+    {
       "page": "/auth/sign-in",
       "regex": "^/auth/sign\\-in(?:/)?$",
       "routeKeys": {},
