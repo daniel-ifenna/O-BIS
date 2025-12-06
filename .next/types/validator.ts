@@ -389,15 +389,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-// Validate ../../app/api/admin/db/purge/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/admin/db/purge">> = Specific
-  const handler = {} as typeof import("../../app/api/admin/db/purge/route.js")
-  type __Check = __IsExpected<typeof handler>
-  // @ts-ignore
-  type __Unused = __Check
-}
-
 // Validate ../../app/api/admin/wallet/deposit/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/admin/wallet/deposit">> = Specific

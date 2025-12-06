@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/auth/layout,_N_T_/auth/vendor-signup/layout,_N_T_/auth/vendor-signup/page,_N_T_/auth/vendor-signup"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/auth/vendor-signup/__PAGE__",
+    "/auth/vendor-signup",
+    "/auth",
+    "/_index",
+    "/_head"
+  ]
+}

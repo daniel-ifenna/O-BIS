@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/contractor/layout,_N_T_/contractor/reports/layout,_N_T_/contractor/reports/page,_N_T_/contractor/reports"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/contractor/reports/__PAGE__",
+    "/contractor/reports",
+    "/contractor",
+    "/_index",
+    "/_head"
+  ]
+}

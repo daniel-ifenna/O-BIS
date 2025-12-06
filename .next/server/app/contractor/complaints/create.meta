@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/contractor/layout,_N_T_/contractor/complaints/layout,_N_T_/contractor/complaints/create/layout,_N_T_/contractor/complaints/create/page,_N_T_/contractor/complaints/create"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/contractor/complaints/create/__PAGE__",
+    "/contractor/complaints/create",
+    "/contractor/complaints",
+    "/contractor",
+    "/_index",
+    "/_head"
+  ]
+}

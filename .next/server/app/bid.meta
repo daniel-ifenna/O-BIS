@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/bid/layout,_N_T_/bid/page,_N_T_/bid"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/bid/__PAGE__",
+    "/bid",
+    "/_index",
+    "/_head"
+  ]
+}

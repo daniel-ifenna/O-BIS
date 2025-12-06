@@ -1,7 +1,6 @@
 {
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
-  "/api/admin/db/purge/route": "/api/admin/db/purge",
   "/api/admin/wallet/deposit/route": "/api/admin/wallet/deposit",
   "/api/auth/contractor/signin/route": "/api/auth/contractor/signin",
   "/api/auth/contractor/signup/route": "/api/auth/contractor/signup",

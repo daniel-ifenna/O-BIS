@@ -4,7 +4,7 @@
     "/api/email/contract-award": {},
     "/api/procurements/[id]/quotes": {},
     "/api/procurements/public": {},
-    "/api/storage/upload": {},
-    "/api/bids/[id]/award": {}
+    "/api/bids/[id]/award": {},
+    "/api/storage/upload": {}
   }
 }

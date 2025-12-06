@@ -289,12 +289,6 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
-      "page": "/api/admin/db/purge",
-      "regex": "^/api/admin/db/purge(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/api/admin/db/purge(?:/)?$"
-    },
-    {
       "page": "/api/admin/wallet/deposit",
       "regex": "^/api/admin/wallet/deposit(?:/)?$",
       "routeKeys": {},

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/HP/Downloads/constructionplatform%20%281%29/app/public-procurement/layout.tsx"],"sourcesContent":["import type React from \"react\"\nimport type { Metadata } from \"next\"\n\nconst logoUrl = process.env.NEXT_PUBLIC_LOGO_URL || \"/icon.sg.png\"\n\nexport const metadata: Metadata = {\n  title: \"Procurement Portal\",\n  icons: { icon: [{ url: \"/icon-light-32x32.png\", sizes: \"32x32\" }], apple: \"/apple-icon.png\" },\n}\n\nexport default function ProcurementLayout({ children }: { children: React.ReactNode }) {\n  return <>{children}</>\n}\n"],"names":[],"mappings":";;;;;;;;AAGA,MAAM,UAAU,qDAAoC;AAE7C,MAAM,WAAqB;IAChC,OAAO;IACP,OAAO;QAAE,MAAM;YAAC;gBAAE,KAAK;gBAAyB,OAAO;YAAQ;SAAE;QAAE,OAAO;IAAkB;AAC9F;AAEe,SAAS,kBAAkB,EAAE,QAAQ,EAAiC;IACnF,qBAAO;kBAAG;;AACZ"}}]
-}

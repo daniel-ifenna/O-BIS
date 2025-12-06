@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/vendor/layout,_N_T_/vendor/sign-in/layout,_N_T_/vendor/sign-in/page,_N_T_/vendor/sign-in"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/vendor/sign-in/__PAGE__",
+    "/vendor/sign-in",
+    "/vendor",
+    "/_index",
+    "/_head"
+  ]
+}
