@@ -33,9 +33,20 @@ export class EmailService {
     const gmailPass = process.env.GMAIL_APP_PASSWORD
 
     if (smtpHost && smtpPort && smtpUser && smtpPass) {
-      this.transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } })
+      this.transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465,
+        auth: { user: smtpUser, pass: smtpPass },
+        // Increase connection timeout to 10 seconds and greeting timeout to 10 seconds
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+      })
     } else if (gmailUser && gmailPass) {
-      this.transporter = nodemailer.createTransport({ service: "gmail", auth: { user: gmailUser, pass: gmailPass } })
+      this.transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: gmailUser, pass: gmailPass },
+      })
     } else {
       console.warn("[EmailService] Email service not configured (missing SMTP/Gmail envs).")
       // In development/test, we might proceed without a transporter, but warn.
