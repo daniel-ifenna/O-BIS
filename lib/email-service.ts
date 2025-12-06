@@ -69,6 +69,68 @@ export class EmailService {
   getStatus() {
     return { ready: Boolean(this.transporter) }
   }
+
+  buildHtmlTemplate(params: { preheader?: string; title: string; greeting?: string; bodyHtml: string; ctaText?: string; ctaUrl?: string; footerNote?: string }) {
+    const pre = params.preheader || params.title
+    const href = this.resolveUrl(params.ctaUrl)
+    const cta = params.ctaText && href
+      ? `<a href="${href}" style="display:inline-block;padding:12px 18px;background:#ea580c;color:#fff;text-decoration:none;border-radius:6px">${params.ctaText}</a>`
+      : ""
+    const note = params.footerNote ? `<p style="margin:16px 0;color:#6b7280">${params.footerNote}</p>` : ""
+    const greet = params.greeting ? `<p style="margin:0 0 12px 0">${params.greeting}</p>` : ""
+    return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f7f7f7;font-family:Inter,Arial,sans-serif;color:#1f2937">
+  <div style="display:none;max-height:0;overflow:hidden">${pre}</div>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f7f7f7">
+    <tr>
+      <td align="center" style="padding:24px">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb">
+          <tr>
+            <td style="padding:24px;border-bottom:1px solid #e5e7eb">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:32px;height:32px;border-radius:8px;background:#ea580c"></div>
+                <div style="font-weight:700;color:#0f172a">Open-Eye Africa Technologies – O-BIS</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px">
+              <h2 style="margin:0 0 8px 0;color:#0f172a">${params.title}</h2>
+              ${greet}
+              ${params.bodyHtml}
+              ${cta}
+              ${note}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px">
+              © ${new Date().getFullYear()} Open-Eye Africa Technologies. All rights reserved.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  
+</body>
+</html>`
+  }
+
+  private resolveUrl(u?: string): string | undefined {
+    if (!u) return undefined
+    const s = String(u).trim()
+    if (!s) return undefined
+    if (/^https?:\/\//i.test(s)) return s
+    if (s.startsWith("/")) {
+      const base = process.env.NEXT_PUBLIC_BASE_URL
+        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined)
+        || process.env.BASE_URL
+        || "http://localhost:3000"
+      return `${base}${s}`
+    }
+    return s
+  }
   
   // ... (omitted) ...
 
