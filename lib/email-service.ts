@@ -38,6 +38,7 @@ export class EmailService {
       this.transporter = nodemailer.createTransport({ service: "gmail", auth: { user: gmailUser, pass: gmailPass } })
     } else {
       console.warn("[EmailService] Email service not configured (missing SMTP/Gmail envs).")
+      // In development/test, we might proceed without a transporter, but warn.
       return
     }
 
