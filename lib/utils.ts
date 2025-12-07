@@ -19,15 +19,17 @@ export function formatDateTime(date: string | number | Date | null | undefined, 
   if (!date) return "N/A"
   const d = new Date(date)
   if (isNaN(d.getTime())) return "Invalid Date"
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  
+  if (!includeTime) {
+    return `${y}-${m}-${day}`
   }
-  if (includeTime) {
-    options.hour = "2-digit"
-    options.minute = "2-digit"
-    options.hour12 = true
-  }
-  return new Intl.DateTimeFormat("en-GB", options).format(d)
+
+  const h = String(d.getHours()).padStart(2, "0")
+  const min = String(d.getMinutes()).padStart(2, "0")
+  
+  return `${y}-${m}-${day} ${h}:${min}`
 }
