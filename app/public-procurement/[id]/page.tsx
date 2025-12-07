@@ -10,19 +10,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ChevronLeft, Send, User, Calendar, MapPin, Package } from "lucide-react"
+import { ChevronLeft, Send, User, Calendar, MapPin, Package, Lock } from "lucide-react"
 import { useProcurements } from "@/lib/procurement-context"
 import { formatDateTime } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
 
 export default function ProcurementDetailPage() {
   const params = useParams()
   const { getProcurement, addQuote, getQuotes } = useProcurements()
   const procurement = getProcurement(params.id as string)
+  const { user } = useAuth()
 
   const [isQuoting, setIsQuoting] = useState(false)
   const [formData, setFormData] = useState({
-    vendorName: "",
-    vendorEmail: "",
+    vendorName: user?.name || "",
+    vendorEmail: user?.email || "",
     pricePerUnit: "",
     totalPrice: "",
     deliveryDays: "",
@@ -191,41 +193,47 @@ export default function ProcurementDetailPage() {
             </Card>
 
             {/* Quote Form */}
-            {isQuoting ? (
-              <Card className="bg-card/60 border-border/50">
-                <CardHeader>
-                  <CardTitle>Submit Your Quote</CardTitle>
-                  <CardDescription>Provide your pricing and delivery terms</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmitQuote} className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="vendorName">Your Company Name *</Label>
-                        <Input
-                          id="vendorName"
-                          name="vendorName"
-                          placeholder="Your company name"
-                          value={formData.vendorName}
-                          onChange={handleChange}
-                          required
-                        />
+            {user?.role === "vendor" ? (
+              isQuoting ? (
+                <Card className="bg-card/60 border-border/50">
+                  <CardHeader>
+                    <CardTitle>Submit Your Quote</CardTitle>
+                    <CardDescription>Provide your pricing and delivery terms</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleSubmitQuote} className="space-y-4">
+                      {/* ... form content ... */}
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="vendorName">Your Company Name *</Label>
+                          <Input
+                            id="vendorName"
+                            name="vendorName"
+                            placeholder="Your company name"
+                            value={formData.vendorName}
+                            onChange={handleChange}
+                            required
+                            readOnly={!!user?.name}
+                            className={user?.name ? "bg-muted" : ""}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="vendorEmail">Email Address *</Label>
+                          <Input
+                            id="vendorEmail"
+                            name="vendorEmail"
+                            type="email"
+                            placeholder="your@company.com"
+                            value={formData.vendorEmail}
+                            onChange={handleChange}
+                            required
+                            readOnly={!!user?.email}
+                            className={user?.email ? "bg-muted" : ""}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="vendorEmail">Email Address *</Label>
-                        <Input
-                          id="vendorEmail"
-                          name="vendorEmail"
-                          type="email"
-                          placeholder="your@company.com"
-                          value={formData.vendorEmail}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
 
-                    <div className="space-y-2">
+                      <div className="space-y-2">
                       <Label htmlFor="proposalFile">Upload Quotation (PDF/DOC)</Label>
                       <Input
                         id="proposalFile"
@@ -319,10 +327,27 @@ export default function ProcurementDetailPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Button onClick={() => setIsQuoting(true)} className="w-full bg-accent hover:bg-accent/90 h-12 text-base">
-                <Send className="w-4 h-4 mr-2" />
-                Submit Your Quote
-              </Button>
+                <Button onClick={() => setIsQuoting(true)} className="w-full bg-accent hover:bg-accent/90 h-12 text-base">
+                  <Send className="w-4 h-4 mr-2" />
+                  Submit Your Quote
+                </Button>
+              )
+            ) : (
+              <Card className="bg-card/60 border-border/50">
+                <CardContent className="py-8 text-center">
+                  <Lock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Login Required</h3>
+                  <p className="text-muted-foreground mb-4">You must be logged in as a Vendor to submit a quote.</p>
+                  <div className="flex justify-center gap-4">
+                    <Link href="/auth/vendor-signup">
+                      <Button variant="default">Sign Up as Vendor</Button>
+                    </Link>
+                    <Link href="/auth/vendor/signin">
+                      <Button variant="outline">Login</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Existing Quotes */}
