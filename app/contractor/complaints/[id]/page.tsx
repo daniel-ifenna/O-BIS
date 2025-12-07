@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, AlertCircle, CheckCircle, Clock } from "lucide-react"
 import { useComplaints } from "@/lib/complaint-context"
+import { formatDateTime } from "@/lib/utils"
 
 export default function ComplaintDetailPage() {
   const params = useParams()
@@ -138,7 +139,7 @@ export default function ComplaintDetailPage() {
                           <p className="font-semibold capitalize text-foreground">{activity.action}</p>
                           <p className="text-sm text-muted-foreground">{activity.notes}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(activity.timestamp).toLocaleString()}
+                            {formatDateTime(activity.timestamp)}
                           </p>
                         </div>
                       </div>

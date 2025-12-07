@@ -5,9 +5,19 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, Building2, ShoppingCart, TrendingUp, Users, ChevronRight, Briefcase, FileText } from "lucide-react"
+import { ArrowRight, Building2, ShoppingCart, TrendingUp, Users, ChevronRight, Briefcase, FileText, CheckCircle, Shield, Menu, X, Globe, Lock, Activity } from "lucide-react"
 import { useProjects } from "@/lib/project-context"
-import { formatNaira } from "@/lib/currency"
+import { formatNaira, formatDateTime } from "@/lib/utils"
+
+async function getProcurements() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/procurements/public`, { cache: "no-store" })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
 
 export default function Home() {
   const router = useRouter()
@@ -499,7 +509,7 @@ export default function Home() {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Requested</p>
-                          <p className="font-semibold">{rq.requestedDate || (rq.createdAt ? new Date(rq.createdAt).toLocaleDateString() : "")}</p>
+                          <p className="font-semibold">{formatDateTime(rq.requestedDate)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Quotes</p>

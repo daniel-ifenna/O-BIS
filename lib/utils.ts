@@ -14,3 +14,17 @@ export function formatNaira(amount: number | string) {
     maximumFractionDigits: 2,
   }).format(num)
 }
+
+export function formatDateTime(date: string | number | Date | null | undefined) {
+  if (!date) return "N/A"
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return "Invalid Date"
+  return new Intl.DateTimeFormat("en-GB", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true, // e.g. 8:30 pm
+  }).format(d)
+}
