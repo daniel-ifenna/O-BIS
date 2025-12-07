@@ -146,7 +146,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                   data: {
                     category: category.replace(/-/g, "_") as any,
                     url: v,
-                    path: "",
+                    path: `${label}_${i + 1}.pdf`,
                     contentType,
                     size: buffer.length || 0,
                     projectId: targetProjectId,
@@ -157,7 +157,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                 })
                 urls.push(v)
               }
-            } catch {
+            } catch (err) {
+              console.error("File create error (falling back to local):", err)
+              // Fallback: Create record with base64 data
+              try {
+                await prisma.fileStorageRecord.create({
+                  data: {
+                    category: category.replace(/-/g, "_") as any,
+                    url: v,
+                    path: `${label}_${i + 1}.pdf`,
+                    contentType,
+                    size: buffer.length || 0,
+                    projectId: targetProjectId,
+                    bidId: createdDb.id,
+                    recordDate,
+                    recordTime,
+                  },
+                })
+              } catch (dbErr) {
+                console.error("Failed to create fallback file record:", dbErr)
+              }
               urls.push(v)
             }
           }
