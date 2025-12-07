@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ChevronLeft, Send, User, Calendar, MapPin, Package } from "lucide-react"
 import { useProcurements } from "@/lib/procurement-context"
+import { formatDateTime } from "@/lib/utils"
 
 export default function ProcurementDetailPage() {
   const params = useParams()
@@ -182,7 +183,7 @@ export default function ProcurementDetailPage() {
                     <Calendar className="w-4 h-4 text-accent" />
                     <div>
                       <p className="text-xs text-muted-foreground">Requested By</p>
-                      <p className="font-semibold">{procurement.requestedDate}</p>
+                      <p className="font-semibold">{formatDateTime(procurement.requestedDate)}</p>
                     </div>
                   </div>
                 </div>
@@ -368,7 +369,7 @@ export default function ProcurementDetailPage() {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Submitted</p>
-                          <p className="font-semibold">{`${quote.recordDate ?? ""}${quote.recordDate ? " " : ""}${quote.recordTime ?? ""}` || quote.submittedAt}</p>
+                          <p className="font-semibold">{formatDateTime(quote.submittedAt)}</p>
                         </div>
                       </div>
                       {quote.notes && (
@@ -398,7 +399,7 @@ export default function ProcurementDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Posted</p>
-                  <p className="font-semibold">{procurement.createdAt}</p>
+                  <p className="font-semibold">{formatDateTime(procurement.createdAt)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Total Quotes</p>
