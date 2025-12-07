@@ -20,6 +20,7 @@ export default function VendorSignup() {
     businessReg: "",
     contact: "",
     email: "",
+    password: "",
     phone: "",
     address: "",
     city: "",
@@ -40,7 +41,7 @@ export default function VendorSignup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (step === 1) {
-      if (!formData.companyName || !formData.email || !formData.phone) {
+      if (!formData.companyName || !formData.email || !formData.phone || !formData.password) {
         setError("Please fill in all required fields")
         return
       }
@@ -168,6 +169,20 @@ export default function VendorSignup() {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password *</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Create a strong password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={8}
                   />
                 </div>
 
