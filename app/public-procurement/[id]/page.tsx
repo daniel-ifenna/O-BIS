@@ -185,7 +185,7 @@ export default function ProcurementDetailPage() {
                     <Calendar className="w-4 h-4 text-accent" />
                     <div>
                       <p className="text-xs text-muted-foreground">Requested By</p>
-                      <p className="font-semibold">{formatDateTime(procurement.requestedDate)}</p>
+                      <p className="font-semibold">{formatDateTime(procurement.requestedDate, false)}</p>
                     </div>
                   </div>
                 </div>
