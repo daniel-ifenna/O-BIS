@@ -166,13 +166,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         estimatedBudget: Number(bid.amount || 0),
         estimatedDuration: Number(bid.duration || 0),
         contractPdfBuffer: pdfBuffer || undefined,
-        loginUrl: `${process.env.NEXT_PUBLIC_BASE_URL || "https://o-bis.vercel.app"}/auth/sign-in`, // Fixed URL
+        loginUrl: `${process.env.NEXT_PUBLIC_BASE_URL || "https://o-bis.vercel.app"}/auth/sign-in`,
         loginEmail: isNewUser ? bid.email : undefined,
         tempPassword: isNewUser ? tempPassword || undefined : undefined,
         isPasswordSetup: !isNewUser,
       })
-      if (sent) contractSent = true
-      else emailError = "Email service returned false"
+      if (sent) {
+        contractSent = true
+      } else {
+        // CRITICAL: If email fails and it's a new user, we must rollback or alert because they can't login!
+        // However, rolling back a DB transaction after external side-effects is hard.
+        // Instead, we throw to trigger the error response, but we already committed DB changes above.
+        // We will return a specific error structure that tells the frontend "Awarded, but Email Failed - Credentials Lost"
+        emailError = "Email service returned false. Contractor created but credentials not sent."
+      }
     } catch (e: any) {
       emailError = String(e?.message || "Failed to send email")
       console.error(`${logPrefix} Email Failed:`, e)
@@ -180,6 +187,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const contractSentAt = new Date().toISOString()
     
+    // If it was a new user and email failed, we MUST expose the temp password in the API response
+    // so the Manager can manually share it with the contractor.
+    const fallbackCredentials = (isNewUser && !contractSent) ? { email: bid.email, password: tempPassword } : null
+
     return NextResponse.json({ 
         ok: true, 
         contractSent, 
@@ -188,7 +199,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         contractSentAt, 
         biddingClosed: true, 
         contractor: { id: user.id, name: user.name, email: user.email, role: user.role }, 
-        project: updatedProject 
+        project: updatedProject,
+        // SAFETY NET: If email failed for a new user, provide credentials to Manager
+        fallbackCredentials 
     })
 
   } catch (e: any) {

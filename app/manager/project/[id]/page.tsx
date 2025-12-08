@@ -235,7 +235,19 @@ function ProjectDetailContent() {
         if (!sent) {
           const msg = String(data?.emailError || "Email delivery failed")
           setActionMessage(msg)
-          toast({ title: "Email failed", description: msg, variant: "destructive" })
+          
+          if (data.fallbackCredentials) {
+            // CRITICAL: Display credentials to manager if email failed for new user
+            toast({ 
+              title: "Email Failed - ACTION REQUIRED", 
+              description: "Could not email credentials. Please copy them now.", 
+              variant: "destructive",
+              duration: 30000 
+            })
+            alert(`IMPORTANT: The email with login credentials failed to send.\n\nPlease securely share these with the contractor:\n\nEmail: ${data.fallbackCredentials.email}\nPassword: ${data.fallbackCredentials.password}`)
+          } else {
+            toast({ title: "Email failed", description: msg, variant: "destructive" })
+          }
         } else {
           toast({ title: "Bidding closed", description: "New submissions are blocked" })
         }
