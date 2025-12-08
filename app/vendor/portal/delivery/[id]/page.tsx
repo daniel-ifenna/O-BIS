@@ -14,18 +14,8 @@ import { ChevronLeft, Upload, CheckCircle } from "lucide-react"
 export default function MarkDelivery({ params }: { params: { id: string } }) {
   const router = useRouter()
 
-  const contract = {
-    id: params.id,
-    item: "Concrete Mix C30",
-    project: "Office Building Renovation",
-    quantity: 100,
-    unit: "cubic meters",
-    price: "$11,500",
-    deliveryLocation: "Downtown Site",
-    deliveryToken: "TOKEN_CONCRETE_001",
-  }
-
   const [formData, setFormData] = useState({
+    amount: "",
     actualDeliveryDate: new Date().toISOString().split("T")[0],
     deliveryNotes: "",
     driverName: "",

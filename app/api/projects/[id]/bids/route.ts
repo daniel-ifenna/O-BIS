@@ -51,6 +51,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const countDb = await prisma.bid.count({ where: { projectId: id } }).catch(() => 0)
       const currentCount = countDb
       if (currentCount >= maxBids) {
+        // Auto-close if limit reached
+        if (project.status !== "Closed") {
+          try { await prisma.project.update({ where: { id: (project as any).id }, data: { status: "Closed" } }) } catch {}
+        }
         return NextResponse.json({ error: "Submission limit reached" }, { status: 403 })
       }
     }
@@ -58,7 +62,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const bidDays = Number(project.bidDays || 0)
     if (bidDays > 0 && project.createdAt) {
       const closeDate = new Date(new Date(project.createdAt).getTime() + bidDays * 24 * 60 * 60 * 1000)
-      if (new Date() > closeDate) return NextResponse.json({ error: "Submission window ended" }, { status: 403 })
+      if (new Date() > closeDate) {
+        // Auto-close if deadline passed
+        if (project.status !== "Closed") {
+          try { await prisma.project.update({ where: { id: (project as any).id }, data: { status: "Closed" } }) } catch {}
+        }
+        return NextResponse.json({ error: "Submission window ended" }, { status: 403 })
+      }
     }
 
     const rawAmount = String(body.amount)
@@ -200,10 +210,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         ;(createdDb as any).subcontractors = Array.isArray(body.subcontractors) ? body.subcontractors : []
       }
       try {
+        const currentBids = await prisma.bid.count({ where: { projectId: targetProjectId } })
+        const maxBids = Number((project as any).maxBids || 0)
+        let newStatus = (project as any).status === "Published" ? "Bidding" : (project as any).status
+        if (maxBids > 0 && currentBids >= maxBids) {
+          newStatus = "Closed"
+        }
+
         await prisma.project.update({
           where: { id: targetProjectId },
           data: {
-            status: ((project as any).status === "Published" ? "Bidding" : (project as any).status) as any,
+            status: newStatus as any,
           },
         })
       } catch {}
@@ -234,13 +251,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 }
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get("page") || "0")
+    const limit = Number(url.searchParams.get("limit") || "50")
+    const skip = page > 0 ? (page - 1) * limit : 0
+    const take = limit
+
     const storage = (() => {
       try { return createFirebaseStorageFromEnv() } catch { return null }
     })()
-    const items = await prisma.bid.findMany({ where: { projectId: id }, orderBy: { submittedAt: "desc" }, include: { files: true } })
+    const items = await prisma.bid.findMany({ 
+      where: { projectId: id }, 
+      orderBy: { submittedAt: "desc" }, 
+      include: { files: true },
+      skip: page > 0 ? skip : undefined,
+      take: page > 0 ? take : undefined,
+    })
     const nameFromPath = (path?: string) => {
       if (!path) return ""
       const base = path.split("/").pop() || ""

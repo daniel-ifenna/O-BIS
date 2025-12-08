@@ -196,6 +196,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const okAll = results.filter((r) => !r.skippedDuplicate).every((r) => r.ok)
+    
+    // Auto-close project from bidding if invite is sent
+    if (results.some(r => r.ok)) {
+      try {
+        await (prisma as any).project.update({ where: { id: bid.projectId }, data: { status: "Closed" } })
+      } catch (e) {
+        console.error("Failed to close project after invite:", e)
+      }
+    }
+
     return NextResponse.json({ ok: okAll, results })
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message || "Failed to send meeting invite") }, { status: 500 })

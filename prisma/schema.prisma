@@ -175,6 +175,8 @@ model Project {
   dailyReports       DailyReport[]
   BidInvitation      BidInvitation[]
   payments           Payment[]
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Bid {
@@ -200,6 +202,8 @@ model Bid {
   invitations  BidInvitation[]
 
   @@index([projectId])
+  @@index([status])
+  @@index([submittedAt])
 }
 
 model BidInvitation {
@@ -265,6 +269,8 @@ model EscrowWalletTransaction {
 
   @@index([userId])
   @@index([projectId])
+  @@index([date])
+  @@index([type])
 }
 
 model FileStorageRecord {
@@ -321,6 +327,7 @@ model PaymentRequest {
   @@index([userId])
   @@index([projectId])
   @@index([status])
+  @@index([requestedAt])
 }
 
 model Payment {
@@ -395,6 +402,7 @@ model DailyReport {
   recordTime      String?
 
   @@index([projectId])
+  @@index([date])
 }
 
 model VendorQuote {
