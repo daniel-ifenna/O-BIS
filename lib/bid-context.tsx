@@ -305,7 +305,8 @@ export function BidProvider({ children }: { children: ReactNode }) {
     ])
     const bid = bids.find((b) => b.id === bidId)
     if (bid) {
-      const interviewUrl = `/interview/${projectId}`
+      const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
+      const interviewUrl = `${baseUrl}/interview/${projectId}`
       await sendEmail(
         bid.email,
         "Interview Invitation",

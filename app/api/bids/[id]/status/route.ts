@@ -36,19 +36,22 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (status === "Accepted") {
       try {
         await (prisma as any).bid.updateMany({ where: { projectId: current.projectId, id: { not: id } }, data: { status: "Rejected" as any, reviewedAt: now } })
-      } catch {
+      } catch (e) {
+        console.warn("[Status] Failed to auto-reject other bids:", e)
         // Fallback: reject other bids in file DB
-        const projectBids = await (async () => {
-          const { getBidsByProjectId } = await import("@/lib/file-db")
-          return getBidsByProjectId(current.projectId)
-        })()
-        for (const b of projectBids) {
-          if (b.id !== id) await updateBidById(b.id, { status: "Rejected" as any, reviewedAt: now.toISOString() as any })
-        }
+        try {
+          const projectBids = await (async () => {
+            const { getBidsByProjectId } = await import("@/lib/file-db")
+            return getBidsByProjectId(current.projectId)
+          })()
+          for (const b of projectBids) {
+            if (b.id !== id) await updateBidById(b.id, { status: "Rejected" as any, reviewedAt: now.toISOString() as any })
+          }
+        } catch {}
       }
       // Auto-create contractor account
       let user: any = null
-      try { user = await (prisma as any).user.findUnique({ where: { email: current.email } }) } catch {}
+      try { user = await (prisma as any).user.findUnique({ where: { email: current.email } }) } catch (e) { console.error("FindUser Error", e) }
       if (!user) {
         try { user = await findUserByEmail(current.email) } catch {}
       }
@@ -58,11 +61,22 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         try {
           user = await (prisma as any).user.create({ data: { name: current.bidderName, email: current.email, role: "contractor", company: current.companyName || null, passwordHash } })
           await (prisma as any).contractor.create({ data: { userId: user.id } })
-        } catch {
-          const created = await createUser({ name: current.bidderName, email: current.email, role: "contractor", company: current.companyName || undefined, passwordHash })
-          await createRoleProfile(created)
-          user = sanitizeUser(created)
+        } catch (e) {
+          console.error("[Status] Failed to create prisma user for accepted bid:", e)
+          // Try to see if it failed because it exists now
+          try { user = await (prisma as any).user.findUnique({ where: { email: current.email } }) } catch {}
+          if (!user) {
+             const created = await createUser({ name: current.bidderName, email: current.email, role: "contractor", company: current.companyName || undefined, passwordHash })
+             await createRoleProfile(created)
+             user = sanitizeUser(created)
+          }
         }
+      } else {
+        // Ensure contractor profile exists if user exists
+        try {
+           const existingC = await (prisma as any).contractor.findUnique({ where: { userId: user.id } })
+           if (!existingC) await (prisma as any).contractor.create({ data: { userId: user.id } })
+        } catch {}
       }
       // Update project status to Active
       try {
@@ -73,7 +87,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     return NextResponse.json(updated)
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to update bid status" }, { status: 500 })
+  } catch (e: any) {
+    console.error("[Status] API Error:", e)
+    return NextResponse.json({ error: String(e?.message || "Failed to update bid status") }, { status: 500 })
   }
 }

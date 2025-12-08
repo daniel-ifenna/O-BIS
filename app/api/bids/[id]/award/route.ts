@@ -19,7 +19,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const auth = getAuthRole(request)
     if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      console.error("[Award] Forbidden access attempt:", { auth, headers: Object.fromEntries(request.headers) })
+      return NextResponse.json({ error: "Forbidden: You must be a manager to award contracts" }, { status: 403 })
     }
     const { id } = await params
     const body = await request.json().catch(() => ({}))
