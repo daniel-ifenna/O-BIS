@@ -21,6 +21,31 @@ const CreateProjectModal = dynamic(() => import("@/components/create-project-mod
 
  
 
+import { Skeleton } from "@/components/ui/skeleton"
+
+function DashboardSkeleton() {
+  return (
+    <div className="grid gap-4">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="bg-card/60 border-border/50">
+          <CardHeader>
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-1/3" />
+              <Skeleton className="h-4 w-1/4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
 function ManagerDashboardContent() {
   const { projects, addProject, setSelectedProjectId, getProject, deleteProject } = useProjects()
   const { user, signOut } = useAuth()
@@ -66,6 +91,7 @@ function ManagerDashboardContent() {
 
   const [recentReports, setRecentReports] = useState<Record<string, any[]>>({})
   const [milestoneSummary, setMilestoneSummary] = useState<Record<string, number>>({})
+  const [loadingSummary, setLoadingSummary] = useState(true)
   
   useEffect(() => {
     const load = async () => {
@@ -80,6 +106,7 @@ function ManagerDashboardContent() {
           setMilestoneSummary(data.milestones || {})
         }
       } catch {}
+      setLoadingSummary(false)
     }
     void load()
   }, []) // Load once on mount
@@ -400,7 +427,9 @@ function ManagerDashboardContent() {
 
           {/* Recent Daily Reports Tab */}
           <TabsContent value="reports" className="space-y-4">
-            {projects.length > 0 ? (
+            {loadingSummary ? (
+              <DashboardSkeleton />
+            ) : projects.length > 0 ? (
               projects.map((project) => (
                 <Card key={project.id} className="bg-card/60 border-border/50">
                   <CardContent className="pt-6">
@@ -439,7 +468,9 @@ function ManagerDashboardContent() {
 
           {/* Milestone Summary Tab */}
           <TabsContent value="milestones" className="space-y-4">
-            {projects.length > 0 ? (
+            {loadingSummary ? (
+              <DashboardSkeleton />
+            ) : projects.length > 0 ? (
               projects.map((project) => (
                 <Card key={project.id} className="bg-card/60 border-border/50">
                   <CardContent className="pt-6">

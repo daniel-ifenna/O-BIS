@@ -38,6 +38,18 @@ function mailer() {
   })
 }
 
+async function sendMailWithRetry(transport: any, mailOptions: any, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await transport.sendMail(mailOptions)
+      return
+    } catch (err) {
+      if (i === retries - 1) throw err
+      await new Promise(res => setTimeout(res, 1000 * (i + 1))) // Exponential backoff
+    }
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const auth = request.headers.get("authorization") || ""
@@ -123,14 +135,14 @@ export async function POST(request: Request) {
       if (fromUser?.email) {
         const ref = [projectId ? `Project ${projectId}` : "", paymentRequestId ? `PaymentRequest ${paymentRequestId}` : ""].filter(Boolean).join(" • ")
         const email = walletDebitedEmail({ recipientName: fromUser.name || "Manager", amount, managerName: fromUser?.name || "Manager", reason: description, reference: ref })
-        await transport.sendMail({ from: process.env.SMTP_FROM, to: fromUser.email, subject: email.subject, html: email.html, text: email.text })
+        await sendMailWithRetry(transport, { from: process.env.SMTP_FROM, to: fromUser.email, subject: email.subject, html: email.html, text: email.text })
       }
       if (toUser?.email) {
         const ref = [projectId ? `Project ${projectId}` : "", paymentRequestId ? `PaymentRequest ${paymentRequestId}` : ""].filter(Boolean).join(" • ")
         const role = (toUser as any).role || "contractor"
         const cta = role === "vendor" ? `${process.env.NEXT_PUBLIC_BASE_URL || ""}/vendor/portal` : `${process.env.NEXT_PUBLIC_BASE_URL || ""}/contractor/wallet`
         const email = internalTransferEmail({ recipientName: toUser.name || "Recipient", amount, managerName: fromUser?.name || "Manager", reference: ref, ctaLink: cta })
-        await transport.sendMail({ from: process.env.SMTP_FROM, to: toUser.email, subject: email.subject, html: email.html, text: email.text })
+        await sendMailWithRetry(transport, { from: process.env.SMTP_FROM, to: toUser.email, subject: email.subject, html: email.html, text: email.text })
       }
     } catch {}
 
