@@ -81,6 +81,7 @@ export async function GET(request: Request) {
           documents,
         }
       })
+    )
     
     // Cache for 30 seconds
     setCache(cacheKey, mapped, 30)
