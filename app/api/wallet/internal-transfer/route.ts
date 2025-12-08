@@ -66,7 +66,16 @@ export async function POST(request: Request) {
     const recordDate = `${y}-${mm}-${d}`
     const recordTime = `${h}:${min}`
 
-    const [debit, credit] = await (prisma as any).$transaction([
+    const FEE = 55
+
+    // Check balance first (optional but good)
+    const { calculateWalletBalance } = await import("@/lib/server/payment-requests")
+    const balance = await calculateWalletBalance(fromUserId)
+    if (balance < amount + FEE) {
+       return NextResponse.json({ error: "Insufficient balance for transfer + fee" }, { status: 400 })
+    }
+
+    const [debit, fee, credit] = await (prisma as any).$transaction([
       prisma.escrowWalletTransaction.create({
         data: {
           userId: fromUserId,
@@ -74,6 +83,18 @@ export async function POST(request: Request) {
           type: "withdrawn" as any,
           amount: String(amount) as any,
           description,
+          paymentRequestId,
+          recordDate,
+          recordTime,
+        },
+      }),
+      prisma.escrowWalletTransaction.create({
+        data: {
+          userId: fromUserId,
+          projectId,
+          type: "withdrawn" as any,
+          amount: String(FEE) as any,
+          description: "Internal Transfer Fee",
           paymentRequestId,
           recordDate,
           recordTime,

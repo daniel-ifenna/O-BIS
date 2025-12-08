@@ -62,9 +62,6 @@ const TARGET_MODELS = new Set([
 ])
 
 if (typeof (prisma as any).$use === "function") (prisma as any).$use(async (params: any, next: any) => {
-  const now = new Date()
-  const date = fmtDate(now)
-  const time = fmtTime(now)
   const modelMatches = TARGET_MODELS.has(params.model || "")
   const preventDeletes = String(process.env.ALLOW_DELETE || "").toLowerCase() !== "true"
   if (preventDeletes && (params.action === "delete" || params.action === "deleteMany")) {
@@ -72,6 +69,10 @@ if (typeof (prisma as any).$use === "function") (prisma as any).$use(async (para
   }
 
   if (modelMatches) {
+    const now = new Date()
+    const date = fmtDate(now)
+    const time = fmtTime(now)
+    
     if (params.action === "create") {
       params.args.data = { ...(params.args.data || {}), recordDate: date, recordTime: time }
     } else if (params.action === "createMany") {

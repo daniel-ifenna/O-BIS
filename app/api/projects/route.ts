@@ -4,9 +4,21 @@ import { verifyToken } from "@/lib/auth/jwt"
 import { createFirebaseStorageFromEnv } from "@/lib/storage"
 import type { Project } from "@/lib/database-schema"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const items = await prisma.project.findMany({ orderBy: { createdAt: "desc" }, include: { _count: { select: { bids: true } }, files: true } })
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get("page") || "0")
+    const limit = Number(url.searchParams.get("limit") || "50")
+    const skip = page > 0 ? (page - 1) * limit : 0
+    const take = limit
+
+    const items = await prisma.project.findMany({ 
+      orderBy: { createdAt: "desc" }, 
+      include: { _count: { select: { bids: true } }, files: true },
+      skip: page > 0 ? skip : undefined,
+      take: page > 0 ? take : undefined,
+    })
+    
     let storage: any = null
     try {
       storage = createFirebaseStorageFromEnv()
