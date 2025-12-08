@@ -46,6 +46,7 @@ enum TransactionType {
 
 enum PaymentStatus {
   PENDING
+  VERIFIED
   APPROVED
   REJECTED
   COMPLETED

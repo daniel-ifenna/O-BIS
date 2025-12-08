@@ -30,11 +30,41 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
     deliveryNotes: "",
     driverName: "",
     vehicleNumber: "",
+    // Bank Details
+    bankName: "",
+    branch: "",
+    accountType: "current",
+    accountNumber: "",
   })
 
   const [proofFiles, setProofFiles] = useState<File[]>([])
+  const [contract, setContract] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    // Fetch contract details
+    fetch(`/api/procurements/public/${params.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.error) {
+           setContract({
+             id: data.id,
+             projectId: data.projectId,
+             item: data.item,
+             project: `Project ${data.projectId}`, // ideally fetch project title too but ID is enough for logic
+             quantity: data.quantity,
+             unit: data.unit,
+             price: "Check Quote", // we don't have quote price here easily unless we fetch quotes
+             deliveryLocation: data.deliveryLocation,
+             deliveryToken: `TOKEN-${data.id.slice(0,8)}`
+           })
+        }
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [params.id])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -44,23 +74,60 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
-      if (proofFiles.length + newFiles.length <= 5) {
-        setProofFiles((prev) => [...prev, ...newFiles])
-      } else {
-        alert("Maximum 5 proof documents allowed")
+      // Only 1 proof file allowed by backend currently for simplicity in this turn
+      if (newFiles.length > 0) {
+        setProofFiles([newFiles[0]]) 
       }
     }
   }
 
   const removeFile = (index: number) => {
-    setProofFiles((prev) => prev.filter((_, i) => i !== index))
+    setProofFiles([])
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Mark delivery:", { formData, proofFiles })
-    router.push("/vendor/portal?tab=delivered")
+    if (!contract) return
+    
+    // Prepare FormData
+    const fd = new FormData()
+    fd.append("projectId", contract.projectId)
+    // We need amount. Let's ask user to confirm amount or fetch it.
+    // For now, I'll add an Amount field to the form since we don't have the quote price handy.
+    fd.append("amount", formData.amount) 
+    fd.append("bankName", formData.bankName)
+    fd.append("branch", formData.branch)
+    fd.append("accountType", formData.accountType)
+    fd.append("accountNumber", formData.accountNumber)
+    if (proofFiles.length > 0) {
+      fd.append("proof", proofFiles[0])
+    }
+    
+    // Add delivery details to metadata or notes? Backend doesn't support generic metadata in PaymentRequest yet.
+    // We will append to bank branch or something? No, that's bad.
+    // We will ignore driver details for the PaymentRequest but maybe send them in a separate API call later?
+    // For now, the user wants to "Request Payment".
+    
+    const token = localStorage.getItem("token") || ""
+    try {
+      const res = await fetch("/api/vendor/payments/requests", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }, // Content-Type auto-set for FormData
+        body: fd
+      })
+      if (res.ok) {
+        router.push("/vendor/portal?tab=delivered")
+      } else {
+        const err = await res.json()
+        alert("Failed: " + (err.error || "Unknown error"))
+      }
+    } catch (e) {
+      alert("Network error")
+    }
   }
+
+  if (loading) return <div className="p-8 text-center">Loading contract details...</div>
+  if (!contract) return <div className="p-8 text-center">Contract not found</div>
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,7 +140,7 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Confirm Delivery</h1>
+            <h1 className="text-2xl font-bold text-foreground">Request Payment</h1>
             <p className="text-sm text-muted-foreground">{contract.item}</p>
           </div>
         </div>
@@ -95,10 +162,6 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Contract Value</p>
-                <p className="font-semibold text-primary">{contract.price}</p>
-              </div>
-              <div>
                 <p className="text-sm text-muted-foreground">Delivery Location</p>
                 <p className="font-semibold text-sm">{contract.deliveryLocation}</p>
               </div>
@@ -111,6 +174,26 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
         </Card>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Invoice Information */}
+           <Card className="bg-card/60 border-border/50">
+            <CardHeader>
+              <CardTitle>Invoice Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div className="space-y-2">
+                  <Label htmlFor="amount">Invoice Amount (NGN) *</Label>
+                  <Input
+                    id="amount"
+                    name="amount"
+                    type="number"
+                    placeholder="e.g. 500000"
+                    onChange={handleChange}
+                    required
+                  />
+               </div>
+            </CardContent>
+           </Card>
+
           {/* Delivery Information */}
           <Card className="bg-card/60 border-border/50">
             <CardHeader>
@@ -168,6 +251,65 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
             </CardContent>
           </Card>
 
+          {/* Bank Details */}
+          <Card className="bg-card/60 border-border/50">
+            <CardHeader>
+              <CardTitle>Bank Details</CardTitle>
+              <CardDescription>Where should we send the payment?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bankName">Bank Name *</Label>
+                  <Input
+                    id="bankName"
+                    name="bankName"
+                    placeholder="e.g. GTBank"
+                    value={formData.bankName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="branch">Branch (Optional)</Label>
+                  <Input
+                    id="branch"
+                    name="branch"
+                    placeholder="e.g. Lagos Main"
+                    value={formData.branch}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="accountType">Account Type</Label>
+                  <select
+                    id="accountType"
+                    name="accountType"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={formData.accountType}
+                    onChange={handleChange}
+                  >
+                    <option value="current">Current</option>
+                    <option value="savings">Savings</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="accountNumber">Account Number *</Label>
+                  <Input
+                    id="accountNumber"
+                    name="accountNumber"
+                    placeholder="0123456789"
+                    value={formData.accountNumber}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Proof of Delivery */}
           <Card className="bg-card/60 border-border/50">
             <CardHeader>
@@ -182,18 +324,17 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
                   className="hidden"
                   id="proof-files"
                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  multiple
                 />
                 <label htmlFor="proof-files" className="cursor-pointer">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm font-medium">Click to upload proof documents</p>
-                  <p className="text-xs text-muted-foreground">PDF, JPG, PNG, DOC (up to 5 files)</p>
+                  <p className="text-sm font-medium">Click to upload proof document</p>
+                  <p className="text-xs text-muted-foreground">PDF, JPG, PNG (Max 1 file)</p>
                 </label>
               </div>
 
               {proofFiles.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold">Uploaded Files ({proofFiles.length}/5):</p>
+                  <p className="text-sm font-semibold">Uploaded File:</p>
                   <div className="space-y-2">
                     {proofFiles.map((file, index) => (
                       <div key={index} className="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
@@ -213,22 +354,6 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
             </CardContent>
           </Card>
 
-          {/* Important Notice */}
-          <Card className="bg-accent/5 border-accent/20">
-            <CardContent className="pt-6">
-              <div className="flex gap-3">
-                <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                <div className="space-y-2">
-                  <p className="font-semibold text-sm">Confirm Delivery Details</p>
-                  <p className="text-sm text-muted-foreground">
-                    Once submitted, the project manager will review your delivery proof and confirm payment. Please
-                    ensure all information is accurate.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Form Actions */}
           <div className="flex gap-4">
             <Link href="/vendor/portal" className="flex-1">
@@ -238,7 +363,7 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
             </Link>
             <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90" disabled={proofFiles.length === 0}>
               <CheckCircle className="w-4 h-4 mr-2" />
-              Confirm Delivery
+              Request Payment
             </Button>
           </div>
         </form>

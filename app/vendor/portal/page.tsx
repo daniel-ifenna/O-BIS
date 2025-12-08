@@ -24,9 +24,11 @@ function VendorPortalContent() {
       if (res.ok) {
         const data = await res.json()
         setBalance(Number(data.balance || 0))
+      } else {
+        setBalance(0)
       }
     }
-    void run()
+    run().catch(() => setBalance(0))
   }, [user?.id])
 
   const openRequests = procurements.filter((p) => p.isPublic && p.status === "open")
