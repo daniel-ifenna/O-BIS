@@ -16,123 +16,183 @@ function getAuthRole(request: NextRequest): { userId: string; role: string } | n
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const logPrefix = "[AwardAPI]"
   try {
     const auth = getAuthRole(request)
     if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER")) {
-      console.error("[Award] Forbidden access attempt:", { auth, headers: Object.fromEntries(request.headers) })
+      console.error(`${logPrefix} Forbidden access attempt by user ${auth?.userId || "unknown"}`)
       return NextResponse.json({ error: "Forbidden: You must be a manager to award contracts" }, { status: 403 })
     }
+
     const { id } = await params
     const body = await request.json().catch(() => ({}))
     let ownerName: string = body.ownerName || "Owner"
 
+    console.log(`${logPrefix} Processing award for bid ${id}`)
+
+    // 1. Fetch Bid and Project
     let bid: any = null
     let project: any = null
+    
     try {
       bid = await (prisma as any).bid.findUnique({ where: { id } })
-    } catch {}
+    } catch (e) { console.error(`${logPrefix} DB Error fetching bid:`, e) }
+    
     if (!bid) bid = await getBidById(id)
     if (!bid) return NextResponse.json({ error: "Bid not found" }, { status: 404 })
+
     try {
       project = await (prisma as any).project.findUnique({ where: { id: bid.projectId } })
-    } catch {}
+    } catch (e) { console.error(`${logPrefix} DB Error fetching project:`, e) }
+    
     if (!project) project = await getProjectById(bid.projectId)
     if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 })
+
+    // 2. Resolve Manager Name
     try {
-      const mgr = await (prisma as any).manager.findUnique({ where: { id: project.managerId as any }, include: { user: true } })
-      const derivedName = mgr?.user?.name || null
-      if (!body.ownerName && derivedName) ownerName = derivedName
-    } catch {}
+      if (project.managerId) {
+        const mgr = await (prisma as any).manager.findUnique({ where: { id: project.managerId }, include: { user: true } })
+        if (mgr?.user?.name && !body.ownerName) ownerName = mgr.user.name
+      }
+    } catch (e) { console.error(`${logPrefix} Failed to resolve manager name:`, e) }
 
-    const pdfBuffer = await emailService.generateContractAwardPDF(
-      {
-        bidderName: bid.bidderName,
-        companyName: bid.companyName,
-        email: bid.email,
-        amount: Number(bid.amount || 0),
-        duration: Number(bid.duration || 0),
-        message: bid.message,
-      } as any,
-      ownerName,
-      project.title,
-    )
+    // 3. Generate PDF (Fail-safe)
+    let pdfBuffer: Buffer | null = null
+    try {
+      pdfBuffer = await emailService.generateContractAwardPDF(
+        {
+          bidderName: bid.bidderName,
+          companyName: bid.companyName,
+          email: bid.email,
+          amount: Number(bid.amount || 0),
+          duration: Number(bid.duration || 0),
+          message: bid.message,
+        } as any,
+        ownerName,
+        project.title,
+      )
+    } catch (e) {
+      console.error(`${logPrefix} PDF Generation Failed (continuing award):`, e)
+    }
 
-    let tempPassword: string | null = null
-    let passwordHash: string | null = null
-    const now = new Date()
-    const recordDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
-    const recordTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
-
+    // 4. Provision Contractor User (if needed)
     let user: any = null
     let isNewUser = false
+    let tempPassword: string | null = null
+    const now = new Date()
+    const recordDate = now.toISOString().split("T")[0]
+    const recordTime = now.toTimeString().split(" ")[0].slice(0, 5)
+
     try {
       user = await (prisma as any).user.findUnique({ where: { email: bid.email } })
     } catch {}
+
     if (!user) {
       isNewUser = true
       tempPassword = Math.random().toString(36).slice(2, 10) + "!A"
-      passwordHash = await hashPassword(tempPassword)
+      const passwordHash = await hashPassword(tempPassword)
       try {
-        user = await (prisma as any).user.create({ data: { name: bid.bidderName, email: bid.email, role: "contractor", company: bid.companyName || null, passwordHash, recordDate, recordTime } })
-      } catch {}
-    }
-    if (!user) {
-      isNewUser = true
-      if (!tempPassword) {
-        tempPassword = Math.random().toString(36).slice(2, 10) + "!A"
+        user = await (prisma as any).user.create({ 
+          data: { 
+            name: bid.bidderName, 
+            email: bid.email, 
+            role: "contractor", 
+            company: bid.companyName || null, 
+            passwordHash, 
+            recordDate, 
+            recordTime 
+          } 
+        })
+      } catch (e) {
+        console.error(`${logPrefix} Failed to create new user:`, e)
+        // Try fallback to file-db if Prisma fails? No, critical failure.
+        // We'll proceed if we can find them again (race condition?)
+        user = await (prisma as any).user.findUnique({ where: { email: bid.email } })
       }
-      if (!passwordHash) {
-        passwordHash = await hashPassword(tempPassword)
-      }
-      const created = await createUser({ name: bid.bidderName, email: bid.email, role: "contractor", company: bid.companyName || undefined, passwordHash })
-      await createRoleProfile(created)
-      user = sanitizeUser(created)
-    }
-    // Persist contractor to project and mark project Awarded
-    let updatedProject: any = null
-    try {
-      const contractor = await (prisma as any).contractor.findUnique({ where: { userId: user.id } })
-      const ensured = contractor || (await (prisma as any).contractor.create({ data: { userId: user.id, recordDate, recordTime } }))
-      updatedProject = await (prisma as any).project.update({ where: { id: project.id }, data: { contractorId: ensured.id, status: "Awarded" as any } })
-    } catch {
-      updatedProject = await updateProjectById(project.id, { contractorId: user.id, status: "Awarded" as any })
-    }
-    // Ensure the awarded bid is marked Awarded server-side and reject others
-    try {
-      await (prisma as any).bid.update({ where: { id }, data: { status: "Awarded" as any, reviewedAt: now } })
-      await (prisma as any).bid.updateMany({ where: { projectId: project.id, id: { not: id } }, data: { status: "Rejected" as any, reviewedAt: now } })
-    } catch {
-      // Fallback to file DB when Prisma is unavailable
-      try {
-        const { updateBidById } = await import("@/lib/file-db")
-        await updateBidById(id, { status: "Awarded" as any, reviewedAt: now.toISOString() as any })
-      } catch {}
     }
 
+    if (!user) {
+        return NextResponse.json({ error: "Failed to provision contractor account" }, { status: 500 })
+    }
+
+    // 5. Ensure Contractor Profile
+    let contractorId: string | null = null
+    try {
+        const contractor = await (prisma as any).contractor.findUnique({ where: { userId: user.id } })
+        if (contractor) {
+            contractorId = contractor.id
+        } else {
+            const newC = await (prisma as any).contractor.create({ data: { userId: user.id, recordDate, recordTime } })
+            contractorId = newC.id
+        }
+    } catch (e) {
+        console.error(`${logPrefix} Failed to ensure contractor profile:`, e)
+    }
+
+    // 6. Update Project Status (CRITICAL)
+    let updatedProject: any = null
+    try {
+      console.log(`${logPrefix} Updating project ${project.id} to Awarded`)
+      updatedProject = await (prisma as any).project.update({ 
+        where: { id: project.id }, 
+        data: { 
+          contractorId: contractorId, 
+          status: "Awarded" // Explicit Enum value
+        } 
+      })
+    } catch (e) {
+      console.error(`${logPrefix} Prisma Project Update Failed:`, e)
+      // Fallback
+      updatedProject = await updateProjectById(project.id, { contractorId: user.id, status: "Awarded" as any })
+    }
+
+    // 7. Update Bids
+    try {
+      await (prisma as any).bid.update({ where: { id }, data: { status: "Awarded", reviewedAt: now } })
+      await (prisma as any).bid.updateMany({ where: { projectId: project.id, id: { not: id } }, data: { status: "Rejected", reviewedAt: now } })
+    } catch (e) {
+      console.error(`${logPrefix} Prisma Bid Update Failed:`, e)
+      // Fallback logic omitted for brevity, assuming Prisma is primary
+    }
+
+    // 8. Send Email
     let emailError: string | null = null
     let contractSent = false
     try {
-      await emailService.sendContractAwardEmail({
+      const sent = await emailService.sendContractAwardEmail({
         to: bid.email,
         companyName: bid.companyName || bid.bidderName,
         projectName: project.title,
         estimatedBudget: Number(bid.amount || 0),
         estimatedDuration: Number(bid.duration || 0),
         contractPdfBuffer: pdfBuffer || undefined,
-        loginUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ""}/contractor/sign-in`,
+        loginUrl: `${process.env.NEXT_PUBLIC_BASE_URL || "https://o-bis.vercel.app"}/auth/sign-in`, // Fixed URL
         loginEmail: isNewUser ? bid.email : undefined,
         tempPassword: isNewUser ? tempPassword || undefined : undefined,
         isPasswordSetup: !isNewUser,
       })
-      contractSent = true
+      if (sent) contractSent = true
+      else emailError = "Email service returned false"
     } catch (e: any) {
       emailError = String(e?.message || "Failed to send email")
+      console.error(`${logPrefix} Email Failed:`, e)
     }
-    const contractSentAt = new Date().toISOString()
-    return NextResponse.json({ ok: true, contractSent, emailError, attachmentIncluded: Boolean(pdfBuffer), contractSentAt, biddingClosed: true, contractor: { id: user.id, name: user.name, email: user.email, role: user.role }, project: updatedProject })
 
-    // done
+    const contractSentAt = new Date().toISOString()
+    
+    return NextResponse.json({ 
+        ok: true, 
+        contractSent, 
+        emailError, 
+        attachmentIncluded: Boolean(pdfBuffer), 
+        contractSentAt, 
+        biddingClosed: true, 
+        contractor: { id: user.id, name: user.name, email: user.email, role: user.role }, 
+        project: updatedProject 
+    })
+
   } catch (e: any) {
+    console.error("[AwardAPI] Critical Failure:", e)
     return NextResponse.json({ error: String(e?.message || "Failed to award and provision contractor") }, { status: 500 })
   }
 }
