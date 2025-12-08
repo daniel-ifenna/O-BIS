@@ -79,6 +79,21 @@ enum PaymentMethodType {
   mobile_money
 }
 
+enum SubscriptionPlan {
+  Starter
+  Pro
+  Unlimited
+}
+
+enum FeeType {
+  none
+  publishing
+  bidding
+  quote
+  transfer
+  subscription
+}
+
 model User {
   id              String                    @id @default(uuid())
   name            String
@@ -87,6 +102,7 @@ model User {
   company         String?
   passwordHash    String
   isVerified      Boolean                   @default(false)
+  isActive        Boolean                   @default(true)
   createdAt       DateTime                  @default(now())
   updatedAt       DateTime                  @updatedAt
   recordDate      String?
@@ -134,6 +150,7 @@ model Manager {
   userId     String    @unique
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   company    String?
+  subscriptionPlan SubscriptionPlan @default(Starter)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   recordDate String?
@@ -270,6 +287,7 @@ model EscrowWalletTransaction {
   projectId        String?
   project          Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
   type             TransactionType
+  feeType          FeeType         @default(none)
   amount           Decimal         @db.Decimal(19, 4)
   date             DateTime        @default(now())
   description      String?

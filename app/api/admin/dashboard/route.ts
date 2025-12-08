@@ -27,17 +27,19 @@ export async function GET(request: NextRequest) {
       projectsPending,
       projectsOngoing,
       projectsCompleted,
-      transactionsToday
+      transactionsToday,
+      newProjectsToday
     ] = await Promise.all([
-      prisma.user.count({ where: { role: "contractor" } }),
-      prisma.user.count({ where: { role: "vendor" } }),
-      prisma.user.count({ where: { role: "manager" } }),
+      prisma.user.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { role: "vendor", isActive: true } }),
+      prisma.user.count({ where: { role: "manager", isActive: true } }),
       prisma.user.count({ where: { createdAt: { gte: today } } }),
       prisma.user.count({ where: { role: "vendor", createdAt: { gte: today } } }),
       prisma.project.count({ where: { status: "Bidding" } }),
       prisma.project.count({ where: { status: "Awarded" } }),
       prisma.project.count({ where: { status: "Completed" } }),
-      prisma.escrowWalletTransaction.count({ where: { date: { gte: today } } })
+      prisma.escrowWalletTransaction.count({ where: { date: { gte: today } } }),
+      prisma.project.count({ where: { createdAt: { gte: today } } })
     ])
 
     // Get all projects for progress tracking
@@ -71,6 +73,7 @@ export async function GET(request: NextRequest) {
         totalManagers,
         newUsersToday,
         newVendorsToday,
+        newProjectsToday,
         projectsPending,
         projectsOngoing,
         projectsCompleted,

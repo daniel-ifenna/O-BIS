@@ -13,37 +13,51 @@ function isAuthorized(req: NextRequest) {
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const url = new URL(request.url)
-  const role = url.searchParams.get("role") || undefined
-  const query = url.searchParams.get("q") || ""
+  const { searchParams } = new URL(request.url)
+  const query = searchParams.get("q") || ""
+  const role = searchParams.get("role") || ""
 
   try {
+    const where: any = {}
+    if (query) {
+      where.OR = [
+        { name: { contains: query, mode: "insensitive" } },
+        { email: { contains: query, mode: "insensitive" } },
+      ]
+    }
+    if (role) {
+      where.role = role
+    }
+
     const users = await prisma.user.findMany({
-      where: {
-        role: role as any,
-        OR: query ? [
-          { name: { contains: query } },
-          { email: { contains: query } }
-        ] : undefined
-      },
+      where,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
-        company: true,
+        isVerified: true,
+        isActive: true,
         createdAt: true,
-        // We can't select 'isVerified' directly if it's not on User model in schema, 
-        // but assuming it's related or we just return basic info.
-        // If isVerified is on Contractor/Vendor/Manager profile, we need to join.
-        // For simplicity, just return User fields.
+        manager: {
+          select: { subscriptionPlan: true }
+        },
+        vendor: {
+          select: { company: true }
+        }
       },
       orderBy: { createdAt: "desc" },
       take: 100
     })
 
-    return NextResponse.json(users)
+    const normalized = users.map(u => ({
+      ...u,
+      subscriptionPlan: u.manager?.subscriptionPlan || null,
+      company: u.vendor?.company || u.manager?.company || null
+    }))
+
+    return NextResponse.json(normalized)
   } catch (e) {
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to load users" }, { status: 500 })
   }
 }

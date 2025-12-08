@@ -13,49 +13,52 @@ function isAuthorized(req: NextRequest) {
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const url = new URL(request.url)
-  const status = url.searchParams.get("status") || undefined
-  const query = url.searchParams.get("q") || ""
+  const { searchParams } = new URL(request.url)
+  const status = searchParams.get("status") || ""
 
   try {
+    const where: any = {}
+    if (status) where.status = status
+
     const projects = await prisma.project.findMany({
-      where: {
-        status: status as any,
-        title: query ? { contains: query } : undefined
-      },
+      where,
       include: {
         manager: {
-          include: {
-            user: {
-               select: { name: true, email: true }
-            }
-          }
+          include: { user: { select: { name: true, email: true } } }
         },
+        milestones: true,
         _count: {
           select: { bids: true }
         }
       },
-      orderBy: { createdAt: "desc" },
-      take: 100
+      orderBy: { createdAt: "desc" }
     })
 
-    const mapped = projects.map(p => ({
-      id: p.id,
-      title: p.title,
-      location: p.location,
-      budget: p.budget,
-      status: p.status,
-      createdAt: p.createdAt,
-      managerName: p.manager?.user?.name || "Unknown",
-      bidsCount: p._count.bids,
-      // We don't track "fees paid" per project explicitly in schema yet unless we query transactions.
-      // We can aggregate fees from transactions related to this project.
-      // For now, let's leave it simple or do a quick aggregation if needed.
+    const withStats = await Promise.all(projects.map(async (p) => {
+      // Calculate progress
+      const progress = p.milestones.reduce((acc, m) => acc + (Number(m.progress || 0) * Number(m.weight || 0) / 100), 0)
+      
+      // Calculate fees collected for this project
+      const fees = await prisma.escrowWalletTransaction.aggregate({
+        where: { projectId: p.id, feeType: { not: "none" } },
+        _sum: { amount: true }
+      })
+
+      return {
+        id: p.id,
+        title: p.title,
+        owner: p.manager?.user.name || "Unknown",
+        budget: p.budget,
+        status: p.status,
+        progress: Math.round(progress),
+        bidsCount: p._count.bids,
+        feesCollected: fees._sum.amount || 0,
+        createdAt: p.createdAt
+      }
     }))
 
-    return NextResponse.json(mapped)
+    return NextResponse.json(withStats)
   } catch (e) {
-    console.error(e)
-    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to load projects" }, { status: 500 })
   }
 }

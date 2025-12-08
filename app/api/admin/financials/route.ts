@@ -13,83 +13,64 @@ function isAuthorized(req: NextRequest) {
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const url = new URL(request.url)
-  const range = url.searchParams.get("range") || "month"
-
   try {
     const today = new Date()
-    let startDate = new Date()
+    today.setHours(0, 0, 0, 0)
     
-    if (range === "day") startDate.setDate(today.getDate() - 1)
-    if (range === "week") startDate.setDate(today.getDate() - 7)
-    if (range === "month") startDate.setMonth(today.getMonth() - 1)
-    if (range === "year") startDate.setFullYear(today.getFullYear() - 1)
-    
-    // Fetch transactions
-    const txns = await prisma.escrowWalletTransaction.findMany({
-      where: {
-        recordDate: { gte: startDate.toISOString().split('T')[0] }
-      }
-    })
+    // Revenue aggregations by fee type
+    const [
+      publishingFees,
+      biddingFees,
+      quoteFees,
+      transferFees,
+      subscriptionFees,
+      totalTransacted
+    ] = await Promise.all([
+      prisma.escrowWalletTransaction.aggregate({ where: { feeType: "publishing" }, _sum: { amount: true } }),
+      prisma.escrowWalletTransaction.aggregate({ where: { feeType: "bidding" }, _sum: { amount: true } }),
+      prisma.escrowWalletTransaction.aggregate({ where: { feeType: "quote" }, _sum: { amount: true } }),
+      prisma.escrowWalletTransaction.aggregate({ where: { feeType: "transfer" }, _sum: { amount: true } }),
+      prisma.escrowWalletTransaction.aggregate({ where: { feeType: "subscription" }, _sum: { amount: true } }),
+      prisma.escrowWalletTransaction.aggregate({ _sum: { amount: true } }) // Total money moved
+    ])
 
-    // Calculate Fees
-    // Logic: 
-    // - 1% Publishing Fee: usually deducted when Manager funds wallet or Project is published. 
-    //   If we don't have explicit Fee records, we can infer or track them separately. 
-    //   Assuming we have a "fee" type or description pattern.
-    // - Bidding Fee: small fee per bid.
-    // - Internal Transfer Fee: 55 NGN.
-    // - Vendor Quote Fee.
+    // Breakdowns
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     
-    // For this MVP, let's assume we can filter by description or type if available.
-    // Or we rely on a specific Fee table if we had one. 
-    // Current schema uses EscrowWalletTransaction with 'description'.
-    
-    let internalTransferFees = 0
-    let publishingFees = 0
-    let biddingFees = 0
-    let quoteFees = 0
-    let subscriptionFees = 0
-    let totalTransacted = 0
-
-    txns.forEach(t => {
-      const amt = Number(t.amount)
-      totalTransacted += amt
-      
-      const desc = (t.description || "").toLowerCase()
-      
-      if (desc.includes("transfer fee") || desc.includes("internal transfer fee")) {
-        internalTransferFees += amt
-      }
-      else if (desc.includes("publishing fee")) {
-        publishingFees += amt
-      }
-      else if (desc.includes("bidding fee")) {
-        biddingFees += amt
-      }
-      else if (desc.includes("quote fee")) {
-        quoteFees += amt
-      }
-      else if (desc.includes("subscription")) {
-        subscriptionFees += amt
-      }
-    })
+    const [dailyRev, weeklyRev, monthlyRev] = await Promise.all([
+       prisma.escrowWalletTransaction.aggregate({ 
+         where: { feeType: { not: "none" }, date: { gte: oneDayAgo } }, 
+         _sum: { amount: true } 
+       }),
+       prisma.escrowWalletTransaction.aggregate({ 
+         where: { feeType: { not: "none" }, date: { gte: oneWeekAgo } }, 
+         _sum: { amount: true } 
+       }),
+       prisma.escrowWalletTransaction.aggregate({ 
+         where: { feeType: { not: "none" }, date: { gte: oneMonthAgo } }, 
+         _sum: { amount: true } 
+       })
+    ])
 
     return NextResponse.json({
-      summary: {
-        internalTransferFees,
-        publishingFees,
-        biddingFees,
-        quoteFees,
-        subscriptionFees,
-        totalRevenue: internalTransferFees + publishingFees + biddingFees + quoteFees + subscriptionFees,
-        totalTransacted
+      fees: {
+        publishing: publishingFees._sum.amount || 0,
+        bidding: biddingFees._sum.amount || 0,
+        quote: quoteFees._sum.amount || 0,
+        transfer: transferFees._sum.amount || 0,
+        subscription: subscriptionFees._sum.amount || 0
       },
-      transactions: txns.slice(0, 100) // Return recent transactions list
+      totalVolume: totalTransacted._sum.amount || 0,
+      revenue: {
+        daily: dailyRev._sum.amount || 0,
+        weekly: weeklyRev._sum.amount || 0,
+        monthly: monthlyRev._sum.amount || 0
+      }
     })
-
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: "Failed to fetch financials" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to load financials" }, { status: 500 })
   }
 }
