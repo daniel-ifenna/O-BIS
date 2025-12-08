@@ -2,17 +2,22 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Eye, Send, Check, Home, LogOut, AlertTriangle, MessageSquare } from "lucide-react"
-import { CreateProjectModal } from "@/components/create-project-modal"
 import { useProjects } from "@/lib/project-context"
 import { useBids } from "@/lib/bid-context"
 import { useAuth } from "@/lib/auth-context"
 import { useComplaints } from "@/lib/complaint-context"
 import { toast } from "@/hooks/use-toast"
 import { formatNaira } from "@/lib/currency"
+
+const CreateProjectModal = dynamic(() => import("@/components/create-project-modal").then(mod => mod.CreateProjectModal), {
+  loading: () => null,
+  ssr: false
+})
 
  
 
@@ -61,35 +66,23 @@ function ManagerDashboardContent() {
 
   const [recentReports, setRecentReports] = useState<Record<string, any[]>>({})
   const [milestoneSummary, setMilestoneSummary] = useState<Record<string, number>>({})
+  
   useEffect(() => {
     const load = async () => {
       try {
-        const reportsByProject: Record<string, any[]> = {}
-        const progressByProject: Record<string, number> = {}
-        for (const p of projects) {
-          const pid = String(p.id)
-          try {
-            const r = await fetch(`/api/projects/${pid}/daily-reports`)
-            if (r.ok) {
-              const arr = await r.json()
-              reportsByProject[pid] = arr.slice(0, 3)
-            }
-          } catch {}
-          try {
-            const m = await fetch(`/api/projects/${pid}/milestones`)
-            if (m.ok) {
-              const items = await m.json()
-              const total = Math.round(items.reduce((sum: number, it: any) => sum + (Number(it.weight || 0) * Number(it.progress || 0)) / 100, 0))
-              progressByProject[pid] = total
-            }
-          } catch {}
+        const token = localStorage.getItem("token") || ""
+        const res = await fetch("/api/manager/dashboard/summary", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setRecentReports(data.reports || {})
+          setMilestoneSummary(data.milestones || {})
         }
-        setRecentReports(reportsByProject)
-        setMilestoneSummary(progressByProject)
       } catch {}
     }
     void load()
-  }, [projects])
+  }, []) // Load once on mount
 
   
 

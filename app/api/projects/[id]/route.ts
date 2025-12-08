@@ -1,11 +1,15 @@
 import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/db"
 import { updateProjectById as updateProjectFile, getProjectById as getProjectFile } from "@/lib/file-db"
- 
+import { getCache, setCache, clearCache } from "@/lib/cache"
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+    const cacheKey = `project_detail_${id}`
+    const cached = getCache(cacheKey)
+    if (cached) return NextResponse.json(cached)
+
     const p = await prisma.project.findUnique({ where: { id }, include: { _count: { select: { bids: true } }, files: true } })
     if (!p) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -49,6 +53,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       }
     })()
     const item: any = { ...p, bids: Number((p as any)._count?.bids || 0), budget: String(p.budget ?? ""), documents: await docs }
+    setCache(cacheKey, item, 10)
     return NextResponse.json(item)
   } catch (e) {
     return NextResponse.json({ error: "Failed to load project" }, { status: 500 })
@@ -57,6 +62,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
+    clearCache("projects_list")
+    clearCache(`project_detail_${id}`)
+    
     const body = await request.json().catch(() => ({}))
     const cleanNum = (v: any) => {
       const s = String(v ?? "")
@@ -105,8 +114,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    ;(process.env as any).ALLOW_DELETE = "true"
     const { id } = await params
+    clearCache("projects_list")
+    clearCache(`project_detail_${id}`)
+    
+    ;(process.env as any).ALLOW_DELETE = "true"
     const proj = await prisma.project.findUnique({ where: { id }, include: { paymentRequests: true } })
     if (!proj) return NextResponse.json({ error: "Project not found" }, { status: 404 })
     if (proj.status === "Awarded" || proj.status === "Completed" || proj.contractorId) {

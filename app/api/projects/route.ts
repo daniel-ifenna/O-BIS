@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { verifyToken } from "@/lib/auth/jwt"
 import { createFirebaseStorageFromEnv } from "@/lib/storage"
 import type { Project } from "@/lib/database-schema"
+import { getCache, setCache, clearCache } from "@/lib/cache"
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +12,10 @@ export async function GET(request: Request) {
     const limit = Number(url.searchParams.get("limit") || "50")
     const skip = page > 0 ? (page - 1) * limit : 0
     const take = limit
+    
+    const cacheKey = `projects_list_p${page}_l${limit}`
+    const cached = getCache(cacheKey)
+    if (cached) return NextResponse.json(cached)
 
     const items = await prisma.project.findMany({ 
       orderBy: { createdAt: "desc" }, 
@@ -75,8 +80,10 @@ export async function GET(request: Request) {
           bids: Number((p as any)._count?.bids || 0),
           documents,
         }
-      }),
-    )
+      })
+    
+    // Cache for 30 seconds
+    setCache(cacheKey, mapped, 30)
     return NextResponse.json(mapped)
   } catch (e) {
     return NextResponse.json({ error: "Failed to load projects" }, { status: 500 })
@@ -85,6 +92,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json()
+  // Invalidate cache on new project
+  clearCache("projects_list")
   try {
     const required = ["title", "location", "budget"]
     for (const k of required) if (!body[k]) return NextResponse.json({ error: `${k} is required` }, { status: 400 })
