@@ -11,6 +11,7 @@ enum Role {
   manager
   contractor
   vendor
+  admin
 }
 
 enum ProjectStatus {
@@ -93,6 +94,7 @@ model User {
   contractor      Contractor?
   manager         Manager?
   vendor          Vendor?
+  admin           Admin?
   transactions    EscrowWalletTransaction[]
   files           FileStorageRecord[]
   paymentRequests PaymentRequest[]
@@ -137,6 +139,16 @@ model Manager {
   recordDate String?
   recordTime String?
   projects   Project[]
+}
+
+model Admin {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  recordDate String?
+  recordTime String?
 }
 
 model Project {
