@@ -583,19 +583,24 @@ export default function Home() {
                 <h4 className="font-semibold mb-4">Platform</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <a href="#" className="hover:text-foreground transition-colors">
+                    <Link href="/auth/sign-in" className="hover:text-foreground transition-colors">
                       Manager Portal
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground transition-colors">
+                    <Link href="/public-procurement" className="hover:text-foreground transition-colors">
                       Procurement Portal
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground transition-colors">
+                    <Link href="/bid" className="hover:text-foreground transition-colors">
                       Bid System
-                    </a>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/admin/login" className="hover:text-foreground transition-colors">
+                      Admin
+                    </Link>
                   </li>
                 </ul>
               </div>
