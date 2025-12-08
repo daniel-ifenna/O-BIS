@@ -30,6 +30,14 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     const valid = await verifyPassword(password, user.passwordHash)
     if (!valid) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+    // Check role specific logic if role is provided in body?
+    // Actually the client sends role but we should trust the DB role.
+    // Admin Check: if user is trying to login as admin but role is not admin?
+    // The client hook `login` passes `expectedRole`. We should verify that here?
+    // Or simpler: just return the user's actual role and let the client redirect.
+    // But for admin security, we might want to strictly check if they are logging into admin portal.
+    // For now, standard login is fine.
+
     const token = signToken({ sub: user.id, role: user.role as any })
     return NextResponse.json({ token, id: user.id, name: user.name, email: user.email, role: user.role, company: user.company, isVerified: (user as any).isVerified ?? false })
   } catch (error) {

@@ -22,6 +22,9 @@ async function main() {
   parseEnvFile(path.join(process.cwd(), ".env"))
   const prisma = new PrismaClient()
   try {
+    // We'll try to truncate "Payment" first; if it fails (table doesn't exist), we ignore it.
+    try { await prisma.$executeRawUnsafe('TRUNCATE TABLE "Payment" RESTART IDENTITY CASCADE;') } catch {}
+
     const sql = [
       'TRUNCATE TABLE "VendorQuote", "ProcurementRequest", "BidInvitation", "Bid", "FileStorageRecord", "EscrowWalletTransaction", "PaymentRequest", "Milestone", "DailyReport", "Project", "Vendor", "Contractor", "Manager", "User", "PasswordResetToken", "EmailVerificationToken" RESTART IDENTITY CASCADE;'
     ].join("\n")

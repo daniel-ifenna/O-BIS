@@ -1,13 +1,12 @@
-[00:00:06.402] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:11.068] Server  LOG      ✓ Ready in 9.3s
-[00:00:34.344] Server  LOG      ○ Compiling /api/auth/signup ...
-[00:00:43.782] Server  LOG     [EmailService] SMTP verified successfully
-[00:00:58.130] Server  LOG     [EmailService] Verification email sent to contractor_1765051399032@example.com
-[00:01:19.779] Server  LOG     [EmailService] Verification email sent to manager_1765051399032@example.com
-[00:01:37.152] Server  LOG     [EmailService] SMTP verified successfully
-[00:01:39.357] Server  LOG     [EmailService] Password reset email sent to contractor_1765051399032@example.com
-[00:02:52.303] Server  LOG     [EmailService] Contract award email sent to contractor_1765051399032@example.com
-[00:03:12.846] Server  LOG     [EmailService] Contract award email sent to contractor_1765051399032@example.com
-[00:03:47.545] Server  LOG      ○ Compiling /api/bids/[id]/review/invite ...
-[00:10:41.656] Server  LOG     [EmailService] Contract award email sent to contractor_1765051868214@example.com
-[00:10:59.002] Server  LOG     [EmailService] Contract award email sent to contractor_1765051868214@example.com
+[00:00:02.944] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:03.415] Server  LOG      ✓ Ready in 2.4s
+[00:00:35.290] Server  LOG     DEBUG: Processing uploads for bid "dad1e1ff-e6cd-4ab4-9624-03741acc67c7" "Keys:" ["proposal","profile"]
+[00:00:36.758] Server  ERROR   C:\Users\HP\Downloads\constructionplatform (1)\node_modules\teeny-request\build\src\index.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:36.763] Server  ERROR   File create error: Error: The specified bucket does not exist.
+[00:00:37.170] Server  ERROR   C:\Users\HP\Downloads\constructionplatform (1)\node_modules\teeny-request\build\src\index.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:37.171] Server  ERROR   File create error: Error: The specified bucket does not exist.
+[00:01:28.706] Server  LOG     DEBUG: Processing uploads for bid "dd74514a-58b6-4080-bca9-554663839e09" "Keys:" ["proposal","profile"]
+[00:01:29.079] Server  ERROR   C:\Users\HP\Downloads\constructionplatform (1)\node_modules\teeny-request\build\src\index.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:01:29.081] Server  ERROR   File create error (falling back to local): Error: The specified bucket does not exist.
+[00:01:30.649] Server  ERROR   C:\Users\HP\Downloads\constructionplatform (1)\node_modules\teeny-request\build\src\index.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:01:30.656] Server  ERROR   File create error (falling back to local): Error: The specified bucket does not exist.

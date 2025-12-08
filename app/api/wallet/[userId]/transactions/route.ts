@@ -18,7 +18,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { userId } = await params
     if (!isAuthorized(payload, userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-    const items = await prisma.escrowWalletTransaction.findMany({ where: { userId }, orderBy: { date: "desc" } })
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get("page") || "0")
+    const limit = Number(url.searchParams.get("limit") || "50")
+    const skip = page > 0 ? (page - 1) * limit : 0
+    const take = limit
+
+    const items = await prisma.escrowWalletTransaction.findMany({ 
+      where: { userId }, 
+      orderBy: { date: "desc" },
+      skip: page > 0 ? skip : undefined,
+      take: page > 0 ? take : undefined,
+    })
     return NextResponse.json(items)
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message || "Failed to load transactions") }, { status: 500 })

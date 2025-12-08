@@ -501,6 +501,7 @@ async function POST(request, { params }) {
             });
             // Persist uploads (data URLs) into storage and FileStorageRecord
             {
+                console.log("DEBUG: Processing uploads for bid", createdDb.id, "Keys:", Object.keys(body.uploads || {}));
                 const storage = (()=>{
                     try {
                         return (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$storage$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createFirebaseStorageFromEnv"])();
@@ -555,7 +556,7 @@ async function POST(request, { params }) {
                                     data: {
                                         category: category.replace(/-/g, "_"),
                                         url: v,
-                                        path: "",
+                                        path: `${label}_${i + 1}.pdf`,
                                         contentType,
                                         size: buffer.length || 0,
                                         projectId: targetProjectId,
@@ -566,7 +567,26 @@ async function POST(request, { params }) {
                                 });
                                 urls.push(v);
                             }
-                        } catch  {
+                        } catch (err) {
+                            console.error("File create error (falling back to local):", err);
+                            // Fallback: Create record with base64 data
+                            try {
+                                await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].fileStorageRecord.create({
+                                    data: {
+                                        category: category.replace(/-/g, "_"),
+                                        url: v,
+                                        path: `${label}_${i + 1}.pdf`,
+                                        contentType,
+                                        size: buffer.length || 0,
+                                        projectId: targetProjectId,
+                                        bidId: createdDb.id,
+                                        recordDate,
+                                        recordTime
+                                    }
+                                });
+                            } catch (dbErr) {
+                                console.error("Failed to create fallback file record:", dbErr);
+                            }
                             urls.push(v);
                         }
                     }

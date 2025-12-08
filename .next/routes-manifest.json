@@ -457,10 +457,22 @@
       "namedRegex": "^/api/manager\\-dashboard(?:/)?$"
     },
     {
+      "page": "/api/payments/deposit",
+      "regex": "^/api/payments/deposit(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/deposit(?:/)?$"
+    },
+    {
       "page": "/api/payments/requests",
       "regex": "^/api/payments/requests(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/payments/requests(?:/)?$"
+    },
+    {
+      "page": "/api/payments/withdraw",
+      "regex": "^/api/payments/withdraw(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/withdraw(?:/)?$"
     },
     {
       "page": "/api/procurements/public",
@@ -595,6 +607,12 @@
       "namedRegex": "^/contractor/wallet(?:/)?$"
     },
     {
+      "page": "/contractor/wallet/withdraw",
+      "regex": "^/contractor/wallet/withdraw(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contractor/wallet/withdraw(?:/)?$"
+    },
+    {
       "page": "/manager/complaints",
       "regex": "^/manager/complaints(?:/)?$",
       "routeKeys": {},
@@ -617,6 +635,12 @@
       "regex": "^/manager/project/create(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/manager/project/create(?:/)?$"
+    },
+    {
+      "page": "/manager/wallet/deposit",
+      "regex": "^/manager/wallet/deposit(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/manager/wallet/deposit(?:/)?$"
     },
     {
       "page": "/public-procurement",

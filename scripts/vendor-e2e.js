@@ -101,7 +101,14 @@ async function main() {
     const pid = listProc.body[0].id
     const quote = await req("POST", `/api/procurements/${pid}/quotes`, { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ vendorName: "Vendor One", vendorEmail: `vendor_${Date.now()}@example.com`, pricePerUnit: "45000", totalPrice: "450000", deliveryDays: 3, deliveryDate: "2025-02-01" }) })
     assert(quote.ok, "Vendor quote submitted", results)
-    assert(Boolean(quote.body?.recordDate) && Boolean(quote.body?.recordTime), "Quote timestamps present", results)
+    const rd = quote.body?.recordDate
+    const rt = quote.body?.recordTime
+    // recordDate is YYYY-MM-DD
+    const dateOk = rd && /^\d{4}-\d{2}-\d{2}$/.test(rd)
+    // recordTime is HH:MM
+    const timeOk = rt && /^\d{2}:\d{2}$/.test(rt)
+    
+    assert(dateOk && timeOk, "Quote timestamps format verified (YYYY-MM-DD HH:MM)", results)
   } else {
     results.warnings.push("No public procurements available; skipping quote submission")
   }

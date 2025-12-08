@@ -1,8 +1,8 @@
 1:"$Sreact.fragment"
-2:I[97367,["/_next/static/chunks/8ff96f318f917170.js","/_next/static/chunks/20d95f75acbd70a3.js","/_next/static/chunks/d6aaee9e0fff2a8f.js"],"ViewportBoundary"]
-4:I[97367,["/_next/static/chunks/8ff96f318f917170.js","/_next/static/chunks/20d95f75acbd70a3.js","/_next/static/chunks/d6aaee9e0fff2a8f.js"],"MetadataBoundary"]
+2:I[97367,["/_next/static/chunks/b88befe34332da56.js","/_next/static/chunks/20d95f75acbd70a3.js","/_next/static/chunks/76461decee0b853c.js"],"ViewportBoundary"]
+4:I[97367,["/_next/static/chunks/b88befe34332da56.js","/_next/static/chunks/20d95f75acbd70a3.js","/_next/static/chunks/76461decee0b853c.js"],"MetadataBoundary"]
 5:"$Sreact.suspense"
-7:I[27201,["/_next/static/chunks/8ff96f318f917170.js","/_next/static/chunks/20d95f75acbd70a3.js","/_next/static/chunks/d6aaee9e0fff2a8f.js"],"IconMark"]
-0:{"buildId":"ONlXbh_9B3GvUWYZDYF0r","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":"$@3"}],["$","div",null,{"hidden":true,"children":["$","$L4",null,{"children":["$","$5",null,{"name":"Next.Metadata","children":"$@6"}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"loading":null,"isPartial":false}
+7:I[27201,["/_next/static/chunks/b88befe34332da56.js","/_next/static/chunks/20d95f75acbd70a3.js","/_next/static/chunks/76461decee0b853c.js"],"IconMark"]
+0:{"buildId":"lITxjN7rj-nbqYV-g3GSN","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":"$@3"}],["$","div",null,{"hidden":true,"children":["$","$L4",null,{"children":["$","$5",null,{"name":"Next.Metadata","children":"$@6"}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"loading":null,"isPartial":false}
 3:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
 6:[["$","title","0",{"children":"O-BIS | Construction Intelligence"}],["$","meta","1",{"name":"description","content":"End-to-end construction and procurement management platform"}],["$","meta","2",{"name":"application-name","content":"O-BIS"}],["$","meta","3",{"name":"generator","content":"v0.app"}],["$","link","4",{"rel":"icon","href":"/icon.sg.png","sizes":"64x64"}],["$","link","5",{"rel":"icon","href":"/icon.svg.png","sizes":"64x64"}],["$","link","6",{"rel":"apple-touch-icon","href":"/apple-icon.png"}],["$","$L7","7",{}]]
