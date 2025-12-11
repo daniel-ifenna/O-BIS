@@ -310,7 +310,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const withUrl = (rec: any) => {
       let url = rec.url
       if (!url && rec.path && storage) {
-        try { url = storage.getPublicUrl(rec.path) } catch {}
+        try { url = storage.getSignedUrl(rec.path, 3600) } catch {}
+        if (!url) { try { url = storage.getPublicUrl(rec.path) } catch {} }
       }
       return url
     }
