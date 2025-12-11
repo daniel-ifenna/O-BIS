@@ -160,12 +160,15 @@ function ContractorDashboardContent() {
 
   // Alerts for Amber/Red only, without technical details
   useEffect(() => {
-    if (rag === "Amber") {
-      toast({ title: "Schedule alert", description: "Slight delay detected. Please align with the manager." })
-    } else if (rag === "Red") {
-      toast({ title: "Schedule risk", description: "Significant delay. Immediate action needed with the manager." })
+    const daysBehind = svDays < 0 ? Math.abs(svDays) : 0
+    if (daysBehind >= 3) {
+      if (rag === "Amber") {
+        toast({ title: "Schedule alert", description: "Project delayed by 3+ days. Please align with the manager." })
+      } else if (rag === "Red") {
+        toast({ title: "Schedule risk", description: "Project delayed by 3+ days. Immediate action needed with the manager." })
+      }
     }
-  }, [rag])
+  }, [rag, svDays])
 
   return (
     <div className="min-h-screen bg-background">

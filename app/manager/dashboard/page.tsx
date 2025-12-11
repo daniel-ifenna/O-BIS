@@ -66,7 +66,10 @@ function ManagerDashboardContent() {
   }
 
   const { bids } = useBids()
-  const recentBids = [...bids].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).reverse()
+  const recentBids = [...bids]
+    .filter((b) => String(b.status || "New") === "New")
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+    .reverse()
   const [lastSeenBidTs, setLastSeenBidTs] = useState<number>(0)
 
   useEffect(() => {
