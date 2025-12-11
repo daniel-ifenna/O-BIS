@@ -305,6 +305,9 @@ export function BidProvider({ children }: { children: ReactNode }) {
     ])
     const bid = bids.find((b) => b.id === bidId)
     if (bid) {
+      // Notification is now handled by the specific meeting invite action
+      // We only send a generic status update notification here if needed
+      /*
       const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
       const interviewUrl = `${baseUrl}/interview/${projectId}`
       await sendEmail(
@@ -312,6 +315,7 @@ export function BidProvider({ children }: { children: ReactNode }) {
         "Interview Invitation",
         `<div><p>Dear ${bid.bidderName},</p><p>Your bid has been shortlisted for interview.</p><p>Join the interview: <a href="${interviewUrl}">${interviewUrl}</a></p><p>Amount: ${formatNairaAmount(bid.amount)}</p><p>Duration: ${bid.duration} days</p></div>`,
       )
+      */
     }
   }
 

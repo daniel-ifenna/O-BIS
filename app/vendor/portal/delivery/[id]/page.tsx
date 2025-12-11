@@ -28,7 +28,7 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
   })
 
   const [proofFiles, setProofFiles] = useState<File[]>([])
-  const [contract, setContract] = useState<any>(null)
+  const [contractData, setContractData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
       .then(res => res.json())
       .then(data => {
         if (data && !data.error) {
-           setContract({
+           setContractData({
              id: data.id,
              projectId: data.projectId,
              item: data.item,
@@ -77,11 +77,11 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!contract) return
+    if (!contractData) return
     
     // Prepare FormData
     const fd = new FormData()
-    fd.append("projectId", contract.projectId)
+    fd.append("projectId", contractData.projectId)
     // We need amount. Let's ask user to confirm amount or fetch it.
     // For now, I'll add an Amount field to the form since we don't have the quote price handy.
     fd.append("amount", formData.amount) 
@@ -117,7 +117,7 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
   }
 
   if (loading) return <div className="p-8 text-center">Loading contract details...</div>
-  if (!contract) return <div className="p-8 text-center">Contract not found</div>
+  if (!contractData) return <div className="p-8 text-center">Contract not found</div>
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,7 +131,7 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Request Payment</h1>
-            <p className="text-sm text-muted-foreground">{contract.item}</p>
+            <p className="text-sm text-muted-foreground">{contractData.item}</p>
           </div>
         </div>
       </header>
@@ -140,24 +140,24 @@ export default function MarkDelivery({ params }: { params: { id: string } }) {
         {/* Contract Summary */}
         <Card className="bg-card/60 border-border/50 mb-8">
           <CardHeader>
-            <CardTitle>{contract.item}</CardTitle>
-            <CardDescription>{contract.project}</CardDescription>
+            <CardTitle>{contractData.item}</CardTitle>
+            <CardDescription>{contractData.project}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Quantity</p>
                 <p className="font-semibold">
-                  {contract.quantity} {contract.unit}
+                  {contractData.quantity} {contractData.unit}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Delivery Location</p>
-                <p className="font-semibold text-sm">{contract.deliveryLocation}</p>
+                <p className="font-semibold text-sm">{contractData.deliveryLocation}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Delivery Token</p>
-                <p className="font-mono text-xs">{contract.deliveryToken}</p>
+                <p className="font-mono text-xs">{contractData.deliveryToken}</p>
               </div>
             </div>
           </CardContent>

@@ -20,7 +20,7 @@ function ContractorDashboardContent() {
   const router = useRouter()
   const { user } = useAuth()
   const { getComplaintsByContractor } = useComplaints()
-  const { projects } = useProjects()
+  const { projects, getProjectsByContractor } = useProjects()
 
   const complaints = user ? getComplaintsByContractor(user.id) : []
   const openComplaints = complaints.filter((c) => c.status === "open").length
@@ -28,7 +28,26 @@ function ContractorDashboardContent() {
     (c) => c.status === "acknowledged" || c.status === "investigating",
   ).length
 
-  const assignedProjects = projects.filter((p) => p.contractorId === user?.id)
+  const [assignedProjects, setAssignedProjects] = useState<any[]>([])
+  useEffect(() => {
+    const load = async () => {
+      if (!user?.id) return
+      try {
+        const token = (typeof window !== "undefined" && (localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("contractorToken") || "")) || ""
+        const res = await fetch("/api/contractors/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        let contractorId: string | null = null
+        if (res.ok) {
+          const me = await res.json()
+          contractorId = me?.contractorId || null
+        }
+        const list = contractorId ? getProjectsByContractor(contractorId) : []
+        setAssignedProjects(list)
+      } catch {
+        setAssignedProjects([])
+      }
+    }
+    void load()
+  }, [user?.id, projects])
 
   const [milestones, setMilestones] = useState<Array<{ id: string | number; name: string; weight: number; progress: number; status: string; startDate: string; endDate: string }>>([])
   const [reports, setReports] = useState<any[]>([])

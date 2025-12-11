@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server"
+import { verifyToken } from "@/lib/auth/jwt"
 import { prisma } from "@/lib/db"
 import { createFirebaseStorageFromEnv } from "@/lib/storage"
  
@@ -260,11 +261,41 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const skip = page > 0 ? (page - 1) * limit : 0
     const take = limit
 
+    const auth = request.headers.get("authorization") || ""
+    const m = /^Bearer\s+(.+)$/i.exec(auth)
+    const payload = m ? verifyToken(m[1]) : null
+    if (!payload) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    // Restrict to project owner (manager) or admin; contractors may only see their own bids
+    let ownerOk = false
+    try {
+      const proj = await prisma.project.findUnique({ where: { id } })
+      if (proj) {
+        if (payload.role === "admin" || payload.role === "ADMIN") ownerOk = true
+        else if (payload.role === "manager" || payload.role === "MANAGER") {
+          const mgr = await (prisma as any).manager.findUnique({ where: { userId: payload.sub } })
+          ownerOk = String(mgr?.id || "") === String((proj as any).managerId || "")
+        } else if (payload.role === "contractor" || payload.role === "CONTRACTOR") {
+          const c = await (prisma as any).contractor.findUnique({ where: { userId: payload.sub } })
+          ownerOk = !!c
+        }
+      }
+    } catch {}
+    if (!ownerOk) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
     const storage = (() => {
       try { return createFirebaseStorageFromEnv() } catch { return null }
     })()
+    const baseWhere: any = { projectId: id }
+    if (payload && (payload.role === "contractor" || payload.role === "CONTRACTOR")) {
+      try {
+        const c = await (prisma as any).contractor.findUnique({ where: { userId: payload.sub } })
+        if (c?.id) baseWhere.contractorId = c.id
+      } catch {}
+    }
     const items = await prisma.bid.findMany({ 
-      where: { projectId: id }, 
+      where: baseWhere, 
       orderBy: { submittedAt: "desc" }, 
       include: { files: true },
       skip: page > 0 ? skip : undefined,

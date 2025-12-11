@@ -62,7 +62,7 @@ function buildIcs({ title, date, time, link, description, attendees }: { title: 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = getAuth(request)
-    if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER")) {
+    if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER" && auth.role !== "admin" && auth.role !== "ADMIN")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
     const { id } = await params
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = getAuth(request)
-    if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER")) {
+    if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER" && auth.role !== "admin" && auth.role !== "ADMIN")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
     const { id } = await params
@@ -109,7 +109,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const mgr = await (prisma as any).manager.findUnique({ where: { id: project.managerId as any } })
       isOwner = String(mgr?.userId || "") === String(auth.userId)
     } catch {}
-    if (!isOwner && String((project as any).managerId || "") !== String(auth.userId)) {
+    // Allow admins to bypass owner check
+    const isAdmin = auth.role === "admin" || auth.role === "ADMIN"
+    if (!isOwner && !isAdmin && String((project as any).managerId || "") !== String(auth.userId)) {
       return NextResponse.json({ error: "Unauthorized: not project manager" }, { status: 403 })
     }
     if (!includeAllShortlisted && bid.status !== "Reviewed") {

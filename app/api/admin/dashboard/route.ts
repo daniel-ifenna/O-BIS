@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { verifyToken } from "@/lib/auth/jwt"
 
+export const dynamic = "force-dynamic"
+
 function isAuthorized(req: NextRequest) {
   const auth = req.headers.get("authorization") || ""
   const m = /^Bearer\s+(.+)$/i.exec(auth)
@@ -30,9 +32,9 @@ export async function GET(request: NextRequest) {
       transactionsToday,
       newProjectsToday
     ] = await Promise.all([
-      prisma.user.count({ where: { isActive: true } }),
-      prisma.user.count({ where: { role: "vendor", isActive: true } }),
-      prisma.user.count({ where: { role: "manager", isActive: true } }),
+      prisma.user.count(),
+      prisma.user.count({ where: { role: "vendor" } }),
+      prisma.user.count({ where: { role: "manager" } }),
       prisma.user.count({ where: { createdAt: { gte: today } } }),
       prisma.user.count({ where: { role: "vendor", createdAt: { gte: today } } }),
       prisma.project.count({ where: { status: "Bidding" } }),

@@ -21,6 +21,14 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/api/admin/users/[id]",
+      "regex": "^/api/admin/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/api/bids/[id]/award",
       "regex": "^/api/bids/([^/]+?)/award(?:/)?$",
       "routeKeys": {
@@ -289,6 +297,78 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/admin/dashboard",
+      "regex": "^/admin/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/dashboard(?:/)?$"
+    },
+    {
+      "page": "/admin/financials",
+      "regex": "^/admin/financials(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/financials(?:/)?$"
+    },
+    {
+      "page": "/admin/login",
+      "regex": "^/admin/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/login(?:/)?$"
+    },
+    {
+      "page": "/admin/projects",
+      "regex": "^/admin/projects(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/projects(?:/)?$"
+    },
+    {
+      "page": "/admin/users",
+      "regex": "^/admin/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/users(?:/)?$"
+    },
+    {
+      "page": "/api/admin/dashboard",
+      "regex": "^/api/admin/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/dashboard(?:/)?$"
+    },
+    {
+      "page": "/api/admin/financials",
+      "regex": "^/api/admin/financials(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/financials(?:/)?$"
+    },
+    {
+      "page": "/api/admin/fix-status",
+      "regex": "^/api/admin/fix\\-status(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/fix\\-status(?:/)?$"
+    },
+    {
+      "page": "/api/admin/projects",
+      "regex": "^/api/admin/projects(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/projects(?:/)?$"
+    },
+    {
+      "page": "/api/admin/transactions",
+      "regex": "^/api/admin/transactions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/transactions(?:/)?$"
+    },
+    {
+      "page": "/api/admin/users",
+      "regex": "^/api/admin/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/users(?:/)?$"
+    },
+    {
+      "page": "/api/admin/vendors",
+      "regex": "^/api/admin/vendors(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/vendors(?:/)?$"
+    },
+    {
       "page": "/api/admin/wallet/deposit",
       "regex": "^/api/admin/wallet/deposit(?:/)?$",
       "routeKeys": {},
@@ -445,6 +525,12 @@
       "namedRegex": "^/api/manager/complaints(?:/)?$"
     },
     {
+      "page": "/api/manager/dashboard/summary",
+      "regex": "^/api/manager/dashboard/summary(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/manager/dashboard/summary(?:/)?$"
+    },
+    {
       "page": "/api/manager/payments/requests",
       "regex": "^/api/manager/payments/requests(?:/)?$",
       "routeKeys": {},
@@ -505,6 +591,12 @@
       "namedRegex": "^/api/uploads/quotation(?:/)?$"
     },
     {
+      "page": "/api/vendor/payments/requests",
+      "regex": "^/api/vendor/payments/requests(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/vendor/payments/requests(?:/)?$"
+    },
+    {
       "page": "/api/wallet/internal-transfer",
       "regex": "^/api/wallet/internal\\-transfer(?:/)?$",
       "routeKeys": {},
@@ -533,6 +625,12 @@
       "regex": "^/auth/sign\\-up(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/auth/sign\\-up(?:/)?$"
+    },
+    {
+      "page": "/auth/vendor/signin",
+      "regex": "^/auth/vendor/signin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/vendor/signin(?:/)?$"
     },
     {
       "page": "/auth/vendor-signup",
@@ -659,6 +757,12 @@
       "regex": "^/vendor/sign\\-in(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/vendor/sign\\-in(?:/)?$"
+    },
+    {
+      "page": "/vendor/wallet",
+      "regex": "^/vendor/wallet(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/vendor/wallet(?:/)?$"
     },
     {
       "page": "/verify",

@@ -78,11 +78,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
            if (!existingC) await (prisma as any).contractor.create({ data: { userId: user.id } })
         } catch {}
       }
-      // Update project status to Active
+      // Update project status to Awarded
       try {
-        await (prisma as any).project.update({ where: { id: current.projectId }, data: { status: "Active" as any } })
+        await (prisma as any).project.update({ where: { id: current.projectId }, data: { status: "Awarded" as any } })
       } catch {
-        await updateProjectById(current.projectId, { status: "Active" as any })
+        await updateProjectById(current.projectId, { status: "Awarded" as any })
       }
     }
 

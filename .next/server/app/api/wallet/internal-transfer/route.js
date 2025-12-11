@@ -1,5 +1,5 @@
 var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/wallet/internal-transfer/route.js")
-R.c("server/chunks/[root-of-the-server]__9762e5d7._.js")
+R.c("server/chunks/[root-of-the-server]__851e0775._.js")
 R.c("server/chunks/node_modules_114d3da3._.js")
 R.c("server/chunks/[root-of-the-server]__b6491784._.js")
 R.c("server/chunks/[root-of-the-server]__cc4c11de._.js")

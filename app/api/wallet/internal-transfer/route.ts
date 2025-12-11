@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { verifyToken } from "@/lib/auth/jwt"
 import nodemailer from "nodemailer"
 import { internalTransferEmail, walletDebitedEmail } from "@/lib/utils/email-templates"
+import { getAdminControls, addInternalTransferRequest } from "@/lib/file-db"
 
 function mailer() {
   const host = process.env.SMTP_HOST || ""
@@ -85,6 +86,23 @@ export async function POST(request: Request) {
     const balance = await calculateWalletBalance(fromUserId)
     if (balance < amount + FEE) {
        return NextResponse.json({ error: "Insufficient balance for transfer + fee" }, { status: 400 })
+    }
+
+    const controls = await getAdminControls()
+    const flaggedLarge = amount >= Number(controls.suspiciousAmountThreshold || 0)
+    if (controls.freezeInternalTransfers || flaggedLarge) {
+      const reqItem = await addInternalTransferRequest({ fromUserId, toUserId, amount, description, projectId, paymentRequestId, status: "pending", flaggedLarge })
+      try {
+        const transport = mailer()
+        const admins = await prisma.user.findMany({ where: { role: "admin" } })
+        for (const a of admins) {
+          if (!a.email) continue
+          const subject = flaggedLarge ? "Alert: Large Internal Transfer Pending" : "Internal Transfer Pending Approval"
+          const text = `Transfer ${amount} from ${fromUserId} to ${toUserId} pending. Request ID: ${reqItem.id}`
+          await sendMailWithRetry(transport, { from: process.env.SMTP_FROM, to: a.email, subject, text, html: `<p>${text}</p>` })
+        }
+      } catch {}
+      return NextResponse.json({ ok: true, pending: true, requestId: reqItem.id })
     }
 
     const [debit, fee, credit] = await (prisma as any).$transaction([

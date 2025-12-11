@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db"
 import { verifyToken } from "@/lib/auth/jwt"
 import { createFirebaseStorageFromEnv } from "@/lib/storage"
 import type { Project } from "@/lib/database-schema"
-import { getCache, setCache, clearCache } from "@/lib/cache"
+// Cache removed for real-time updates
+// import { getCache, setCache, clearCache } from "@/lib/cache"
+
+export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
   try {
@@ -13,13 +16,37 @@ export async function GET(request: Request) {
     const skip = page > 0 ? (page - 1) * limit : 0
     const take = limit
     
-    const cacheKey = `projects_list_p${page}_l${limit}`
-    const cached = getCache(cacheKey)
-    if (cached) return NextResponse.json(cached)
+    const auth = request.headers.get("authorization") || ""
+    const m = /^Bearer\s+(.+)$/i.exec(auth)
+    const payload = m ? verifyToken(m[1]) : null
+    let where: any = {}
+    if (payload) {
+      if (payload.role === "manager" || payload.role === "MANAGER") {
+        try {
+          const mgr = await (prisma as any).manager.findUnique({ where: { userId: payload.sub } })
+          if (mgr?.id) where.managerId = mgr.id
+        } catch {}
+      } else if (payload.role === "contractor" || payload.role === "CONTRACTOR") {
+        try {
+          const c = await (prisma as any).contractor.findUnique({ where: { userId: payload.sub } })
+          if (c?.id) where.contractorId = c.id
+        } catch {}
+      } else if (payload.role === "vendor" || payload.role === "VENDOR") {
+        where = { id: "__none__" }
+      } else if (payload.role === "admin" || payload.role === "ADMIN") {
+        where = {}
+      }
+    }
+
+    // Manual cache removed to ensure real-time consistency
+    // const cacheKey = `projects_list_p${page}_l${limit}`
+    // const cached = getCache(cacheKey)
+    // if (cached) return NextResponse.json(cached)
 
     const items = await prisma.project.findMany({ 
       orderBy: { createdAt: "desc" }, 
       include: { _count: { select: { bids: true } }, files: true },
+      where: Object.keys(where).length ? where : undefined,
       skip: page > 0 ? skip : undefined,
       take: page > 0 ? take : undefined,
     })
@@ -83,8 +110,8 @@ export async function GET(request: Request) {
       })
     )
     
-    // Cache for 30 seconds
-    setCache(cacheKey, mapped, 30)
+    // Cache set removed
+    // setCache(cacheKey, mapped, 30)
     return NextResponse.json(mapped)
   } catch (e) {
     return NextResponse.json({ error: "Failed to load projects" }, { status: 500 })
@@ -93,8 +120,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json()
-  // Invalidate cache on new project
-  clearCache("projects_list")
+  // Cache clear removed as cache is no longer used
+  // clearCache("projects_list")
   try {
     const required = ["title", "location", "budget"]
     for (const k of required) if (!body[k]) return NextResponse.json({ error: `${k} is required` }, { status: 400 })

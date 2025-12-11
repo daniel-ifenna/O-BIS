@@ -95,7 +95,7 @@ export default function Home() {
         <div className="space-y-6 mb-12">
           <div className="inline-block">
             <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold">
-              Build Intelligence System
+              Building Intelligence System
             </span>
           </div>
           <h2 className="text-5xl md:text-7xl font-bold text-foreground leading-[1.1] tracking-tight text-balance">
@@ -146,7 +146,7 @@ export default function Home() {
           <Card className="bg-card/60 border-border/40 hover:border-primary/40 transition-all hover:shadow-lg">
             <CardContent className="pt-6 text-center">
               <TrendingUp className="w-6 h-6 mx-auto text-primary mb-2" />
-              <p className="text-3xl font-bold text-primary">₦2.5B</p>
+              <p className="text-3xl font-bold text-primary">₦200.5B</p>
               <p className="text-sm text-muted-foreground">Total Value Managed</p>
             </CardContent>
           </Card>

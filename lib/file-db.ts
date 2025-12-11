@@ -413,3 +413,98 @@ export async function createDailyReport(report: Omit<DailyReport, "id">): Promis
   await saveDailyReports([newReport, ...arr])
   return newReport
 }
+
+// ===================== Contract Awards =====================
+export type AwardRecord = {
+  id: string
+  bidId: string
+  projectId: string | number
+  contractorUserId: string
+  contractorEmail: string
+  contractorName?: string
+  managerUserId?: string
+  status: "Awarded" | "Failed"
+  emailSent: boolean
+  emailError?: string | null
+  contractSentAt?: string
+  payloadSnapshot?: any
+  createdAt: string
+  recordDate: string
+  recordTime: string
+}
+
+export async function getAwardRecords(): Promise<AwardRecord[]> {
+  return readJson<AwardRecord[]>("award_records", [])
+}
+
+export async function saveAwardRecords(items: AwardRecord[]): Promise<void> {
+  await writeJson("award_records", items)
+}
+
+export async function addAwardRecord(record: Omit<AwardRecord, "id" | "createdAt" | "recordDate" | "recordTime">): Promise<AwardRecord> {
+  const arr = await getAwardRecords()
+  const now = new Date()
+  const iso = now.toISOString()
+  const item: AwardRecord = {
+    ...record,
+    id: `award-${Date.now()}`,
+    createdAt: iso,
+    recordDate: fmtDate(now),
+    recordTime: fmtTime(now),
+  }
+  await saveAwardRecords([item, ...arr])
+  return item
+}
+
+export type AdminControls = {
+  freezeInternalTransfers: boolean
+  suspiciousAmountThreshold: number
+}
+
+export async function getAdminControls(): Promise<AdminControls> {
+  return readJson<AdminControls>("admin_controls", { freezeInternalTransfers: false, suspiciousAmountThreshold: 5000000 })
+}
+
+export async function setAdminControls(ctrl: Partial<AdminControls>): Promise<AdminControls> {
+  const current = await getAdminControls()
+  const next = { ...current, ...ctrl }
+  await writeJson("admin_controls", next)
+  return next
+}
+
+export type InternalTransferRequest = {
+  id: string
+  fromUserId: string
+  toUserId: string
+  amount: number
+  description: string
+  projectId?: string | null
+  paymentRequestId?: string | null
+  status: "pending" | "approved" | "declined"
+  flaggedLarge?: boolean
+  createdAt: string
+  recordDate: string
+  recordTime: string
+  approvedAt?: string
+  approvedBy?: string
+}
+
+export async function getInternalTransferRequests(): Promise<InternalTransferRequest[]> {
+  return readJson<InternalTransferRequest[]>("internal_transfer_requests", [])
+}
+
+export async function addInternalTransferRequest(rec: Omit<InternalTransferRequest, "id" | "createdAt" | "recordDate" | "recordTime">): Promise<InternalTransferRequest> {
+  const arr = await getInternalTransferRequests()
+  const now = new Date()
+  const iso = now.toISOString()
+  const item: InternalTransferRequest = { ...rec, id: `itr-${Date.now()}`, createdAt: iso, recordDate: fmtDate(now), recordTime: fmtTime(now) }
+  await writeJson("internal_transfer_requests", [item, ...arr])
+  return item
+}
+
+export async function updateInternalTransferRequest(id: string, updates: Partial<InternalTransferRequest>): Promise<InternalTransferRequest | undefined> {
+  const arr = await getInternalTransferRequests()
+  const next = arr.map((r) => (r.id === id ? { ...r, ...updates } : r))
+  await writeJson("internal_transfer_requests", next)
+  return next.find((r) => r.id === id)
+}

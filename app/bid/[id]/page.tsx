@@ -19,6 +19,7 @@ export default function BidSubmission() {
   const router = useRouter()
   const { id } = useParams() as { id: string }
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { getProject, isLoaded, updateProject } = useProjects()
   const { submitBid, getBidsByProject } = useBids()
   const [remoteProject, setRemoteProject] = useState<any | null>(null)
@@ -125,45 +126,60 @@ export default function BidSubmission() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Submit Bid clicked", id)
-    const requiredDocs = ["proposal"]
-    const missing = requiredDocs.filter((k) => (uploads[k] || []).length === 0)
-    if (missing.length > 0) {
-      setFormError("Please upload the proposal document")
-      return
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    setFormError("")
+    
+    try {
+      const requiredDocs = ["proposal"]
+      const missing = requiredDocs.filter((k) => (uploads[k] || []).length === 0)
+      if (missing.length > 0) {
+        setFormError("Please upload the proposal document")
+        setIsSubmitting(false)
+        return
+      }
+
+      const urls = await ensureFileUrls()
+      const subs = subcontractors.filter((s) => s.name || s.company || s.scope)
+      const amountNum = Number(String(formData.estimate).replace(/[^0-9.]/g, ""))
+      const durationNum = Number(String(formData.duration))
+      
+      const result = await submitBid(id, {
+        contractorId: "public",
+        bidderName: formData.bidderName,
+        companyName: formData.companyName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        amount: amountNum,
+        duration: durationNum,
+        message: formData.message,
+        subcontractors: subs,
+        uploads: {
+          proposal: urls.proposal,
+          profile: urls.profile,
+          specs: urls.specs,
+          tax: urls.tax,
+          bond: urls.bond,
+          additional: urls.additional,
+        },
+      })
+
+      if (!result.ok) {
+        setFormError(result.error || "Failed to submit bid")
+        setIsSubmitting(false)
+        return
+      }
+
+      setSubmitted(true)
+      setTimeout(() => {
+        router.push("/bid")
+      }, 3000)
+    } catch (e) {
+      console.error(e)
+      setFormError("An unexpected error occurred")
+      setIsSubmitting(false)
     }
-    const urls = await ensureFileUrls()
-    const subs = subcontractors.filter((s) => s.name || s.company || s.scope)
-    const amountNum = Number(String(formData.estimate).replace(/[^0-9.]/g, ""))
-    const durationNum = Number(String(formData.duration))
-    const result = await submitBid(id, {
-      contractorId: "public",
-      bidderName: formData.bidderName,
-      companyName: formData.companyName,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-      amount: amountNum,
-      duration: durationNum,
-      message: formData.message,
-      subcontractors: subs,
-      uploads: {
-        proposal: urls.proposal,
-        profile: urls.profile,
-        specs: urls.specs,
-        tax: urls.tax,
-        bond: urls.bond,
-        additional: urls.additional,
-      },
-    })
-    if (!result.ok) {
-      setFormError(result.error || "Failed to submit bid")
-      return
-    }
-    setSubmitted(true)
-    setTimeout(() => {
-      router.push("/bid")
-    }, 3000)
   }
 
   if (submitted) {
@@ -794,8 +810,8 @@ export default function BidSubmission() {
                 Cancel
               </Button>
             </Link>
-            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
-              Submit Bid
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Bid"}
             </Button>
           </div>
         </form>

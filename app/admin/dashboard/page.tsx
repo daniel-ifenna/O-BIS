@@ -29,13 +29,15 @@ export default function AdminDashboardPage() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-6 w-full max-w-5xl">
+        <TabsList className="grid grid-cols-8 w-full max-w-5xl">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="financials">Financials</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="vendors">Vendors</TabsTrigger>
+          <TabsTrigger value="contractors">Contractors</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="transactions">Logs</TabsTrigger>
+          <TabsTrigger value="awards">Awards</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -60,6 +62,12 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="transactions" className="space-y-4">
           <TransactionsTab active={activeTab === "transactions"} />
+        </TabsContent>
+        <TabsContent value="awards" className="space-y-4">
+          <AwardsTab active={activeTab === "awards"} />
+        </TabsContent>
+        <TabsContent value="contractors" className="space-y-4">
+          <ContractorsTab active={activeTab === "contractors"} />
         </TabsContent>
       </Tabs>
     </div>
@@ -367,12 +375,80 @@ function ProjectsTab({ active }: { active: boolean }) {
 
 function TransactionsTab({ active }: { active: boolean }) {
   const [logs, setLogs] = useState<any[]>([])
-  useEffect(() => { if (active) fetchData("/api/admin/transactions").then(setLogs) }, [active])
+  const [controls, setControls] = useState<any>(null)
+  const [pending, setPending] = useState<any[]>([])
+  const [threshold, setThreshold] = useState<string>("")
+  const load = async () => {
+    const data = await fetchData("/api/admin/transfers")
+    setControls(data.controls)
+    setPending(data.pending)
+    setLogs(data.logs)
+    setThreshold(String(data.controls?.suspiciousAmountThreshold || ""))
+  }
+  useEffect(() => { if (active) load() }, [active])
+
+  const toggleFreeze = async (freeze: boolean) => {
+    const token = localStorage.getItem("auth_token")
+    await fetch("/api/admin/transfers?action=freeze", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ freeze, threshold }) })
+    await load()
+  }
+  const actOn = async (id: string, action: "approve" | "decline") => {
+    const token = localStorage.getItem("auth_token")
+    await fetch(`/api/admin/transfers?action=${action}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ id }) })
+    await load()
+  }
 
   return (
     <Card>
-      <CardHeader><CardTitle>Transaction Logs</CardTitle></CardHeader>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Transaction Logs</CardTitle>
+            <CardDescription>Internal transfers with freeze and approval controls</CardDescription>
+          </div>
+          <div className="flex gap-2 items-center">
+            <Input value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="Suspicious threshold (₦)" className="w-56" />
+            <Button variant={controls?.freezeInternalTransfers ? "destructive" : "default"} onClick={() => toggleFreeze(!controls?.freezeInternalTransfers)}>
+              {controls?.freezeInternalTransfers ? "Unfreeze Transfers" : "Freeze Transfers"}
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
       <CardContent>
+        {pending.length > 0 && (
+          <div className="mb-6">
+            <CardTitle className="text-base">Pending Internal Transfers</CardTitle>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>From</TableHead>
+                  <TableHead>To</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Flag</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pending.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="text-xs">{new Date(p.createdAt).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs">{p.fromUserId}</TableCell>
+                    <TableCell className="text-xs">{p.toUserId}</TableCell>
+                    <TableCell className="font-semibold">{formatCurrency(p.amount)}</TableCell>
+                    <TableCell>{p.flaggedLarge ? <Badge variant="destructive">Large</Badge> : <Badge variant="outline">Normal</Badge>}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => actOn(p.id, "approve")}>Approve</Button>
+                        <Button size="sm" variant="destructive" onClick={() => actOn(p.id, "decline")}>Decline</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
@@ -400,6 +476,126 @@ function TransactionsTab({ active }: { active: boolean }) {
             ))}
           </TableBody>
         </Table>
+      </CardContent>
+    </Card>
+  )
+}
+
+function AwardsTab({ active }: { active: boolean }) {
+  const [awards, setAwards] = useState<any[]>([])
+  useEffect(() => { if (active) fetchData("/api/admin/awards").then(setAwards) }, [active])
+  return (
+    <Card>
+      <CardHeader><CardTitle>Contract Awards</CardTitle><CardDescription>Email delivery status and history</CardDescription></CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Project</TableHead>
+              <TableHead>Contractor</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Error</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {awards.map((r) => (
+              <TableRow key={r.id}>
+                <TableCell className="text-xs">{new Date(r.createdAt).toLocaleString()}</TableCell>
+                <TableCell className="text-sm">{r.projectId}</TableCell>
+                <TableCell>
+                  <div className="text-sm">{r.contractorName || r.contractorEmail}</div>
+                  <div className="text-xs text-muted-foreground">{r.contractorEmail}</div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={r.status === 'Awarded' ? 'default' : 'destructive'}>{r.status}</Badge>
+                </TableCell>
+                <TableCell>
+                  {r.emailSent ? (
+                    <span className="flex items-center gap-1 text-green-600"><CheckCircle className="w-4 h-4" /> Sent</span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-orange-600"><Clock className="w-4 h-4" /> Failed</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-xs text-destructive">{r.emailError || '-'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ContractorsTab({ active }: { active: boolean }) {
+  const [items, setItems] = useState<any[]>([])
+  const [search, setSearch] = useState("")
+  const load = () => {
+    const params = new URLSearchParams()
+    if (search) params.set("q", search)
+    fetchData(`/api/admin/contractors?${params}`).then(setItems)
+  }
+  useEffect(() => { if (active) load() }, [active])
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Contractors</CardTitle>
+            <CardDescription>Contact info, documents, awards, active jobs, performance, compliance</CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Input placeholder="Search contractors..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()} className="w-64" />
+            <Button onClick={load}>Search</Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Documents</TableHead>
+              <TableHead>Awards</TableHead>
+              <TableHead>Active Jobs</TableHead>
+              <TableHead>Avg Progress</TableHead>
+              <TableHead>Compliance</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((c) => (
+              <TableRow key={c.id}>
+                <TableCell>
+                  <div className="text-sm font-medium">{c.name}</div>
+                  <div className="text-xs text-muted-foreground">{c.company || '-'}</div>
+                </TableCell>
+                <TableCell className="text-xs">{c.email}</TableCell>
+                <TableCell>{c.documents}</TableCell>
+                <TableCell>{c.contractsAwarded}</TableCell>
+                <TableCell>{c.activeJobs}</TableCell>
+                <TableCell>{c.avgProgress}%</TableCell>
+                <TableCell>
+                  <Badge variant={c.compliance === 'compliant' ? 'default' : 'destructive'} className="capitalize">{c.compliance}</Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="mt-6">
+          <CardTitle className="text-base">Contracts</CardTitle>
+          <div className="mt-2 space-y-2">
+            {items.flatMap((c) => (c.contracts || []).map((p: any, i: number) => (
+              <div key={`${c.id}-${p.id}-${i}`} className="text-sm flex justify-between p-2 bg-secondary/10 rounded">
+                <span className="truncate max-w-[40%]">{p.title}</span>
+                <span className="text-muted-foreground">{p.status}</span>
+                <span className="text-muted-foreground">Manager: {p.manager || '-'}</span>
+                <span className="font-semibold">{formatCurrency(p.budget)}</span>
+              </div>
+            )))}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

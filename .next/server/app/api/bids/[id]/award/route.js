@@ -1,10 +1,10 @@
 var R=require("../../../../../chunks/[turbopack]_runtime.js")("server/app/api/bids/[id]/award/route.js")
-R.c("server/chunks/[root-of-the-server]__f5da0cd2._.js")
-R.c("server/chunks/[root-of-the-server]__cc4c11de._.js")
+R.c("server/chunks/[root-of-the-server]__58032d71._.js")
+R.c("server/chunks/node_modules_114d3da3._.js")
 R.c("server/chunks/lib_auth_password_ts_84dd16af._.js")
 R.c("server/chunks/_e1e0cb18._.js")
 R.c("server/chunks/[root-of-the-server]__b6491784._.js")
-R.c("server/chunks/node_modules_114d3da3._.js")
+R.c("server/chunks/[root-of-the-server]__cc4c11de._.js")
 R.c("server/chunks/_next-internal_server_app_api_bids_[id]_award_route_actions_6a309d52.js")
 R.m(67538)
 module.exports=R.m(67538).exports

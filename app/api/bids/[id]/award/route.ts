@@ -3,7 +3,7 @@ export const runtime = "nodejs"
 import { verifyToken } from "@/lib/auth/jwt"
 import { emailService } from "@/lib/email-service"
 import { prisma } from "@/lib/db"
-import { getBidById, getProjectById, findUserByEmail, createUser, createRoleProfile, sanitizeUser, updateProjectById } from "@/lib/file-db"
+import { getBidById, getProjectById, findUserByEmail, createUser, createRoleProfile, sanitizeUser, updateProjectById, addAwardRecord } from "@/lib/file-db"
 import { hashPassword } from "@/lib/auth/password"
 
 function getAuthRole(request: NextRequest): { userId: string; role: string } | null {
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const logPrefix = "[AwardAPI]"
   try {
     const auth = getAuthRole(request)
-    if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER")) {
+    if (!auth || (auth.role !== "manager" && auth.role !== "MANAGER" && auth.role !== "admin" && auth.role !== "ADMIN")) {
       console.error(`${logPrefix} Forbidden access attempt by user ${auth?.userId || "unknown"}`)
-      return NextResponse.json({ error: "Forbidden: You must be a manager to award contracts" }, { status: 403 })
+      return NextResponse.json({ error: "Forbidden: You must be a manager or admin to award contracts" }, { status: 403 })
     }
 
     const { id } = await params
@@ -47,6 +47,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     
     if (!project) project = await getProjectById(bid.projectId)
     if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 })
+
+    // Owner check: manager who owns the project or admin
+    let isOwner = false
+    try {
+      if (project.managerId) {
+        const mgr = await (prisma as any).manager.findUnique({ where: { id: project.managerId }, include: { user: true } })
+        isOwner = String(mgr?.userId || mgr?.user?.id || "") === String(auth.userId)
+      }
+    } catch {}
+    const isAdmin = auth.role === "admin" || auth.role === "ADMIN"
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: "Forbidden: only the project owner or admin can award" }, { status: 403 })
+    }
 
     // 2. Resolve Manager Name
     try {
@@ -190,6 +203,30 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // If it was a new user and email failed, we MUST expose the temp password in the API response
     // so the Manager can manually share it with the contractor.
     const fallbackCredentials = (isNewUser && !contractSent) ? { email: bid.email, password: tempPassword } : null
+
+    // 9. Persist Award Record for Admin visibility
+    try {
+      await addAwardRecord({
+        bidId: String(bid.id),
+        projectId: String(project.id),
+        contractorUserId: String(user.id),
+        contractorEmail: String(user.email || bid.email),
+        contractorName: String(user.name || bid.bidderName || ""),
+        managerUserId: isOwner ? String(auth.userId) : undefined,
+        status: contractSent ? "Awarded" : "Failed",
+        emailSent: contractSent,
+        emailError,
+        contractSentAt,
+        payloadSnapshot: {
+          companyName: bid.companyName,
+          amount: bid.amount,
+          duration: bid.duration,
+          projectTitle: project.title,
+        },
+      })
+    } catch (e) {
+      console.error("[AwardAPI] Failed to persist award record:", e)
+    }
 
     return NextResponse.json({ 
         ok: true, 
