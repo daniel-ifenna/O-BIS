@@ -44,10 +44,19 @@ export async function GET(request: NextRequest) {
         _sum: { amount: true }
       })
 
+      let ownerName = p.manager?.user?.name || null
+      if (!ownerName) {
+        try {
+          if ((p as any).managerId) {
+            const mgr = await (prisma as any).manager.findUnique({ where: { id: (p as any).managerId }, include: { user: true } })
+            ownerName = mgr?.user?.name || null
+          }
+        } catch {}
+      }
       return {
         id: p.id,
         title: p.title,
-        owner: p.manager?.user.name || "Unknown",
+        owner: ownerName || "Unknown",
         budget: p.budget,
         status: p.status,
         progress: Math.round(progress),

@@ -378,12 +378,14 @@ function TransactionsTab({ active }: { active: boolean }) {
   const [controls, setControls] = useState<any>(null)
   const [pending, setPending] = useState<any[]>([])
   const [threshold, setThreshold] = useState<string>("")
+  const [reports, setReports] = useState<any[]>([])
   const load = async () => {
     const data = await fetchData("/api/admin/transfers")
     setControls(data.controls)
     setPending(data.pending)
     setLogs(data.logs)
     setThreshold(String(data.controls?.suspiciousAmountThreshold || ""))
+    try { const r = await fetchData("/api/admin/daily-reports"); setReports(r || []) } catch {}
   }
   useEffect(() => { if (active) load() }, [active])
 
@@ -476,6 +478,36 @@ function TransactionsTab({ active }: { active: boolean }) {
             ))}
           </TableBody>
         </Table>
+
+        <div className="mt-8">
+          <CardTitle className="text-base">Daily Reporting (Activity Logs)</CardTitle>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Project</TableHead>
+                <TableHead>Contractor</TableHead>
+                <TableHead>Work</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>QA</TableHead>
+                <TableHead>Safety</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reports.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="text-xs">{r.date} {r.time}</TableCell>
+                  <TableCell className="text-xs truncate max-w-[180px]">{r.project}</TableCell>
+                  <TableCell className="text-xs">{r.contractor}</TableCell>
+                  <TableCell className="text-xs truncate max-w-[240px]">{r.workDescription}</TableCell>
+                  <TableCell className="font-semibold">{r.workPercentage}%</TableCell>
+                  <TableCell className="text-xs">{r.qaIssues}</TableCell>
+                  <TableCell className="text-xs">{r.safetyIncidents}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )
