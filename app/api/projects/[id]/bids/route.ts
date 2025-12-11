@@ -52,8 +52,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const countDb = await prisma.bid.count({ where: { projectId: id } }).catch(() => 0)
       const currentCount = countDb
       if (currentCount >= maxBids) {
-        // Auto-close if limit reached
-        if (project.status !== "Closed") {
+        // Auto-close only if in publishing/bidding phases
+        if (project.status === "Published" || project.status === "Bidding") {
           try { await prisma.project.update({ where: { id: (project as any).id }, data: { status: "Closed" } }) } catch {}
         }
         return NextResponse.json({ error: "Submission limit reached" }, { status: 403 })
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const closeDate = new Date(new Date(project.createdAt).getTime() + bidDays * 24 * 60 * 60 * 1000)
       if (new Date() > closeDate) {
         // Auto-close if deadline passed
-        if (project.status !== "Closed") {
+        if (project.status === "Published" || project.status === "Bidding") {
           try { await prisma.project.update({ where: { id: (project as any).id }, data: { status: "Closed" } }) } catch {}
         }
         return NextResponse.json({ error: "Submission window ended" }, { status: 403 })

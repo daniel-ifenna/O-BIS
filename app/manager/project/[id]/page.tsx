@@ -325,8 +325,8 @@ function ProjectDetailContent() {
               View Overview
             </Button>
           </Link>
-          <Link href={`/contractor/payments/request`}>
-            <Button variant="outline" size="sm" className="ml-2">Open Payment Request</Button>
+          <Link href={`/manager/payments`}>
+            <Button variant="outline" size="sm" className="ml-2">Payment Requests</Button>
           </Link>
           <Button
             variant="destructive"

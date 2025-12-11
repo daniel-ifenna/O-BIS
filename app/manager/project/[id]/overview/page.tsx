@@ -270,12 +270,15 @@ export default function ProjectOverview() {
       const next = [entry, ...Array.isArray(prev) ? prev : []].slice(0, 200)
       if (typeof window !== "undefined") localStorage.setItem(key, JSON.stringify(next))
     } catch {}
-    if (rag === "Amber") {
-      toast({ title: "Schedule alert", description: `Slight delay detected (${delayPct}%). Monitor closely.` })
-    } else if (rag === "Red") {
-      toast({ title: "Schedule risk", description: `Significant delay (${delayPct}%). Immediate action required.` })
+    const daysBehind = Math.max(0, daysElapsed - plannedDaysElapsed)
+    if (daysBehind >= 3) {
+      if (rag === "Amber") {
+        toast({ title: "Schedule alert", description: `Project delayed by 3+ days. Monitor closely.` })
+      } else if (rag === "Red") {
+        toast({ title: "Schedule risk", description: `Project delayed by 3+ days. Immediate action required.` })
+      }
     }
-  }, [projectId, latest.planned, latest.actual, delayPct, rag])
+  }, [projectId, latest.planned, latest.actual, rag, daysElapsed, plannedDaysElapsed])
 
   useEffect(() => {
     if (Math.round(totalProgress) >= 100) setProjectStatus(projectId, "Completed")

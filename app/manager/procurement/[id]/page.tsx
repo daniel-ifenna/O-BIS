@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, CheckCircle, AlertCircle } from "lucide-react"
 import { useProcurements } from "@/lib/procurement-context"
+import { useProjects } from "@/lib/project-context"
 import { ProtectedRoute } from "@/lib/protected-route"
 
 function ProcurementReviewContent({ params }: { params: { id: string } }) {
   const { getProcurement, getQuotes, selectQuote, awardQuote } = useProcurements()
+  const { getProject } = useProjects()
   const procurement = getProcurement(params.id)
   const quotes = procurement ? getQuotes(procurement.id) : []
+  const project = procurement ? getProject(procurement.projectId) : undefined
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,6 +41,10 @@ function ProcurementReviewContent({ params }: { params: { id: string } }) {
                   <p className="font-semibold text-sm">{procurement.item}</p>
                 </div>
                 <div>
+                  <p className="text-sm text-muted-foreground">Project</p>
+                  <p className="font-semibold text-sm">{project?.title || procurement.projectId}</p>
+                </div>
+                <div>
                   <p className="text-sm text-muted-foreground">Quantity</p>
                   <p className="font-semibold">
                     {procurement.quantity} {procurement.unit}
@@ -50,6 +57,10 @@ function ProcurementReviewContent({ params }: { params: { id: string } }) {
                 <div>
                   <p className="text-sm text-muted-foreground">Delivery Location</p>
                   <p className="font-semibold text-sm">{procurement.deliveryLocation}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Project Location</p>
+                  <p className="font-semibold text-sm">{project?.location || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Requested</p>
