@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { hashPassword } from "@/lib/auth/password"
 import { emailService } from "@/lib/email-service"
 import { issueVerificationToken } from "@/lib/auth/reset"
+import { signToken } from "@/lib/auth/jwt"
 import { findUserByEmail, createUser, createRoleProfile, sanitizeUser } from "@/lib/file-db"
 
 export async function POST(request: NextRequest) {
@@ -60,7 +61,8 @@ export async function POST(request: NextRequest) {
         } catch (e) {
           console.error("Failed to issue verification token or send email:", e)
         }
-        return NextResponse.json({ id: user.id, name: user.name, email: user.email, role: user.role, company: user.company, isVerified: (user as any).isVerified ?? false })
+        const jwt = signToken({ sub: user.id, role: user.role as any })
+        return NextResponse.json({ token: jwt, id: user.id, name: user.name, email: user.email, role: user.role, company: user.company, isVerified: (user as any).isVerified ?? false })
       } catch {
         // Fallback to file DB when Prisma is unreachable
         const existing = await findUserByEmail(email)
@@ -69,7 +71,8 @@ export async function POST(request: NextRequest) {
         const created = await createUser({ name, email, role, company, passwordHash })
         await createRoleProfile(created)
         const user = sanitizeUser(created)
-        return NextResponse.json({ id: user.id, name: user.name, email: user.email, role: user.role, company: (user as any).company, isVerified: (user as any).isVerified ?? false })
+        const jwt = signToken({ sub: user.id, role: user.role as any })
+        return NextResponse.json({ token: jwt, id: user.id, name: user.name, email: user.email, role: user.role, company: (user as any).company, isVerified: (user as any).isVerified ?? false })
       }
     } else {
       const existing = await findUserByEmail(email)
@@ -78,7 +81,8 @@ export async function POST(request: NextRequest) {
       const created = await createUser({ name, email, role, company, passwordHash })
       await createRoleProfile(created)
       const user = sanitizeUser(created)
-      return NextResponse.json({ id: user.id, name: user.name, email: user.email, role: user.role, company: (user as any).company, isVerified: (user as any).isVerified ?? false })
+      const jwt = signToken({ sub: user.id, role: user.role as any })
+      return NextResponse.json({ token: jwt, id: user.id, name: user.name, email: user.email, role: user.role, company: (user as any).company, isVerified: (user as any).isVerified ?? false })
     }
   } catch (error) {
     const msg = (error as any)?.message ? String((error as any).message) : "Internal server error"
