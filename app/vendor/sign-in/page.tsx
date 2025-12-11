@@ -56,7 +56,7 @@ export default function VendorSignIn() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link href="/auth/password/request" className="text-sm text-primary hover:underline">
+                <Link href="/auth/forgot-password" className="text-sm text-primary hover:underline">
                   Forgot?
                 </Link>
               </div>
