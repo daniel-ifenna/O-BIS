@@ -52,7 +52,9 @@ export function BidProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/bids")
+        const token = (typeof window !== "undefined" && (localStorage.getItem("auth_token") || localStorage.getItem("token") || localStorage.getItem("managerToken") || localStorage.getItem("contractorToken") || "")) || ""
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
+        const res = await fetch("/api/bids", { headers })
         if (res.ok) {
           const items = await res.json()
           if (Array.isArray(items)) setBids(items)
