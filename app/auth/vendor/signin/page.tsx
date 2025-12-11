@@ -16,7 +16,7 @@ export default function VendorSignIn() {
     password: "",
   })
   const [error, setError] = useState("")
-  const { signIn, isLoading } = useAuth()
+  const { signInWithRole, isLoading } = useAuth()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -29,7 +29,7 @@ export default function VendorSignIn() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await signIn(formData.email, formData.password)
+      await signInWithRole(formData.email, formData.password, "vendor")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed. Please try again.")
     }

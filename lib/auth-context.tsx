@@ -183,7 +183,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithRole = async (email: string, password: string, role: "manager" | "contractor" | "vendor" | "admin") => {
-     await signIn(email, password)
+    setIsLoading(true)
+    try {
+      const result = await login(email, password, role)
+      if (!result.success) throw new Error(result.error || "Sign in failed")
+      const saved = localStorage.getItem("auth_user")
+      if (saved) {
+        const u = JSON.parse(saved)
+        const next = u.role === "vendor" ? "/vendor/portal" : u.role === "contractor" ? "/contractor/dashboard" : u.role === "admin" ? "/admin/dashboard" : "/manager/dashboard"
+        router.push(next)
+        return
+      }
+      router.push(role === "vendor" ? "/vendor/portal" : role === "contractor" ? "/contractor/dashboard" : role === "admin" ? "/admin/dashboard" : "/manager/dashboard")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return <AuthContext.Provider value={{ user, isLoading, signUp, signIn, signInWithRole, signOut, login }}>{children}</AuthContext.Provider>
