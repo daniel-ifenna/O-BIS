@@ -216,7 +216,7 @@ function ManagerDashboardContent() {
           {/* Projects Tab */}
           <TabsContent value="projects" className="space-y-4">
             <div className="grid gap-4">
-              {(projects.filter((p: any) => !p.contractorId) as any[]).map((project) => (
+              {(projects as any[]).map((project) => (
                 <Card
                   key={project.id}
                   className="bg-card/60 border-border/50 hover:border-primary/30 transition-colors cursor-pointer"

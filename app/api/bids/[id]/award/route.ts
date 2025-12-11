@@ -145,18 +145,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // 6. Update Project Status (CRITICAL)
     let updatedProject: any = null
     try {
-      console.log(`${logPrefix} Updating project ${project.id} to Awarded`)
+      console.log(`${logPrefix} Updating project ${project.id} to Active`)
       updatedProject = await (prisma as any).project.update({ 
         where: { id: project.id }, 
         data: { 
           contractorId: contractorId, 
-          status: "Awarded" // Explicit Enum value
+          status: "Active" // Move to work-in-progress after award
         } 
       })
     } catch (e) {
       console.error(`${logPrefix} Prisma Project Update Failed:`, e)
       // Fallback
-      updatedProject = await updateProjectById(project.id, { contractorId: user.id, status: "Awarded" as any })
+      updatedProject = await updateProjectById(project.id, { contractorId: user.id, status: "Active" as any })
     }
 
     // 7. Update Bids
@@ -228,6 +228,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       console.error("[AwardAPI] Failed to persist award record:", e)
     }
 
+    const passwordInfo = isNewUser ? { tempPassword, resetUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ""}/auth/password/request` } : undefined
     return NextResponse.json({ 
         ok: true, 
         contractSent, 
@@ -238,7 +239,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         contractor: { id: user.id, name: user.name, email: user.email, role: user.role }, 
         project: updatedProject,
         // SAFETY NET: If email failed for a new user, provide credentials to Manager
-        fallbackCredentials 
+        fallbackCredentials,
+        passwordInfo
     })
 
   } catch (e: any) {
