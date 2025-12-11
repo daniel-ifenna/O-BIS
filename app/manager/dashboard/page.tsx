@@ -574,7 +574,7 @@ function ManagerBalance() {
   useEffect(() => {
     const run = async () => {
       if (!user?.id) return
-      const token = (typeof window !== "undefined" && (localStorage.getItem("auth_token") || localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("managerToken") || "")) || ""
+      const token = (typeof window !== "undefined" && (localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("managerToken") || "")) || ""
       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       const res = await fetch(`/api/wallet/${user.id}`, { headers })
       if (res.ok) {
